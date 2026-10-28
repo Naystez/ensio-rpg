@@ -6599,6 +6599,125 @@
         .ensio-campaign-actions button {
           flex: 1 1 150px;
         }
+      }</style
+    ><style id="ensio-simplified-feedback">
+      #ensioQuestReward {
+        position: fixed;
+        z-index: 9000;
+        left: 50%;
+        top: max(18px, env(safe-area-inset-top));
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100vw - 28px);
+        pointer-events: none;
+        padding: 13px 18px;
+        border-radius: 14px;
+        border: 1px solid #7cc3a2;
+        color: #edfff8;
+        background: #0b292bee;
+        box-shadow:
+          0 8px 30px #0006,
+          0 0 22px #0bbbef33;
+        font-weight: 700;
+        animation: ensioReward 0.3s ease-out;
+      }
+      #ensioQuestReward[hidden] {
+        display: none;
+      }
+      .ensio-quest-pulse {
+        animation: ensioPulse 0.7s ease-out;
+      }
+      .ensio-quest-spark {
+        position: fixed;
+        width: 6px;
+        height: 6px;
+        z-index: 8999;
+        pointer-events: none;
+        border-radius: 2px;
+        animation: ensioSpark 0.65s ease-out forwards;
+      }
+      @keyframes ensioReward {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -12px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0) scale(1);
+        }
+      }
+      @keyframes ensioSpark {
+        to {
+          transform: translate(var(--dx), var(--dy)) rotate(110deg);
+          opacity: 0;
+        }
+      }
+      @keyframes ensioPulse {
+        35% {
+          box-shadow:
+            inset 0 0 0 2px #7cc3a2,
+            0 0 20px #0bbbef66;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #ensioQuestReward,
+        .ensio-quest-pulse {
+          animation: none;
+        }
+        .ensio-quest-spark {
+          display: none;
+        }
+      }</style
+    ><style id="ensio-career-visibility">
+      #ensioProfileTop {
+        margin: 0 0 20px;
+      }
+      #ensioProfileTop > details {
+        border-color: #3d789b;
+        background: linear-gradient(135deg, #143548, #0b2235);
+      }
+      #ensioCampaign {
+        position: relative;
+        margin: 20px 0 24px;
+        border: 2px solid #0bbbef;
+        border-radius: 18px;
+        background:
+          radial-gradient(ellipse at 100% 0, #0bbbef22, transparent 70%),
+          linear-gradient(145deg, #123955, #0a1d32);
+        box-shadow:
+          0 0 26px #0bbbef1c,
+          inset 4px 0 #7cc3a2;
+      }
+      #ensioCampaign::before {
+        content: "TON HISTOIRE";
+        display: block;
+        width: fit-content;
+        margin: 18px 18px 0;
+        padding: 6px 11px;
+        background: #0bbbef;
+        border-radius: 7px;
+        color: #071c2d;
+        font-weight: 900;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+      }
+      #ensioCampaign .ensio-scenes > h2 {
+        font-size: clamp(23px, 4vw, 31px);
+        line-height: 1.2;
+        color: #e8fbff;
+        margin-top: 12px;
+      }
+      #ensioCampaign .ensio-scene-choices button {
+        border-color: #42a5d0;
+        min-height: 48px;
+      }
+      #ensioCampaign .ensio-scenes-nav {
+        border-bottom: 1px solid #0bbbef55;
+        padding-bottom: 16px;
+      }
+      #ensioEncounter:focus {
+        outline: 2px solid #0bbbef;
+        outline-offset: 5px;
       }
     </style></head
   ><body
@@ -6829,7 +6948,7 @@
               ><h2>🏗️ DÉFIS DES SERVICES & MISSIONS</h2
               ><p
                 >Des défis sur plusieurs jours pour accéder aux soutenances et
-                obtenir du matériel. Aucun XP supplémentaire.</p
+                rencontrer les collègues. Aucun XP supplémentaire.</p
               ></div
             ><div id="dungeonRoot"></div
             ><div class="rpg-panel"
@@ -8246,8 +8365,10 @@
             name: q.name,
             xp: q.xp,
           });
+          const rewardRect = b.getBoundingClientRect();
           if (t === today()) animateXP(b, q.xp);
           save();
+          if (t === today()) window.ensioQuestReward?.(q, rewardRect);
           if (t !== today()) return;
           const afterG = level(xpOf(), "global")[0],
             afterM = level(xpOf(q.module), "module")[0],
@@ -8489,9 +8610,9 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ready = x.ready;
             const kind =
               q.kind === "cumulative" ? "Accomplissement" : "Régularité";
-            return `<article class="dungeon-card ${unlocked ? "" : "sealed"} ${claimed ? "cleared" : ""}"><div class="dungeon-portal">${unlocked ? q.icon : "🔒"}</div><div class="eyebrow">${claimed ? "✦ MATÉRIEL ACQUIS" : unlocked ? "⚠ DÉFI ACCESSIBLE" : "ACCÈS RESTREINT · NIVEAU " + q.lv}</div><h3>${unlocked ? q.name : "SERVICE À DÉCOUVRIR"}</h3><span class="dungeon-kind">${kind}</span><p>${unlocked ? q.condition : "Atteins le niveau " + q.lv + " pour révéler cette épreuve."}</p><div class="dungeon-meta"><span>${q.days} journées · ${q.kind === "cumulative" ? "total sur la période" : "consécutives"}</span><b>${unlocked ? x.count + "/" + q.days : "???"}</b></div><div class="bar"><div class="fill" style="width:${unlocked ? (100 * x.count) / q.days : 0}%"></div></div>${unlocked ? dungeonTimeline(q) : ""}<div class="dungeon-status">${claimed ? "✓ VICTOIRE — récompense conservée" : !unlocked ? "🔒 Verrouillé" : ready ? "✦ Épreuve accomplie" : "◇ Épreuve en cours"}</div><div class="dungeon-reward">${unlocked ? "✦ Matériel : " + q.reward : "✦ Récompense mystérieuse"}</div><button data-portal="${q.id}" ${!unlocked || claimed || !ready ? "disabled" : ""}>${claimed ? "✓ Défi terminé" : !unlocked ? "🔒 Verrouillé" : ready ? "OBTENIR LE MATÉRIEL" : "Épreuve en cours"}</button></article>`;
+            return `<article class="dungeon-card ${unlocked ? "" : "sealed"} ${claimed ? "cleared" : ""}"><div class="dungeon-portal">${unlocked ? q.icon : "🔒"}</div><div class="eyebrow">${claimed ? "✦ DÉFI ACCOMPLI" : unlocked ? "⚠ DÉFI ACCESSIBLE" : "ACCÈS RESTREINT · NIVEAU " + q.lv}</div><h3>${unlocked ? q.name : "SERVICE À DÉCOUVRIR"}</h3><span class="dungeon-kind">${kind}</span><p>${unlocked ? q.condition : "Atteins le niveau " + q.lv + " pour révéler cette épreuve."}</p><div class="dungeon-meta"><span>${q.days} journées · ${q.kind === "cumulative" ? "total sur la période" : "consécutives"}</span><b>${unlocked ? x.count + "/" + q.days : "???"}</b></div><div class="bar"><div class="fill" style="width:${unlocked ? (100 * x.count) / q.days : 0}%"></div></div>${unlocked ? dungeonTimeline(q) : ""}<div class="dungeon-status">${claimed ? "✓ VICTOIRE — récompense conservée" : !unlocked ? "🔒 Verrouillé" : ready ? "✦ Épreuve accomplie" : "◇ Épreuve en cours"}</div><div class="dungeon-reward">${unlocked ? "✦ Accès à la soutenance du service" : "✦ Récompense mystérieuse"}</div><button data-portal="${q.id}" ${!unlocked || claimed || !ready ? "disabled" : ""}>${claimed ? "✓ Défi terminé" : !unlocked ? "🔒 Verrouillé" : ready ? "TERMINER LE DÉFI" : "Épreuve en cours"}</button></article>`;
           }).join("") +
-          '</div><p class="notice">Les défis de régularité demandent une série consécutive ; les défis d’accomplissement demandent toutes les journées de leur période, sans imposer un ordre de validation. Le matériel obtenu reste acquis et ne donnent aucun XP.</p>';
+          '</div><p class="notice">Les défis de régularité demandent une série consécutive ; les défis d’accomplissement demandent toutes les journées de leur période, sans imposer un ordre de validation. Les défis terminés débloquent les soutenances, sans donner d’XP supplémentaire.</p>';
       }
       function claimDungeon(id) {
         const q = DUNGEONS.find((x) => x.id === id);
@@ -8505,7 +8626,11 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         dungeonClaims[id] = { date: today(), reward: q.reward };
         appStorage.setItem(DUNGEON_KEY, JSON.stringify(dungeonClaims));
         render();
-        queueToast("◈", "DÉFI DE SERVICE TERMINÉ", q.reward + " · " + q.name);
+        queueToast(
+          "◈",
+          "DÉFI DE SERVICE TERMINÉ",
+          "Soutenance débloquée · " + q.name,
+        );
       }
       let analyticsPeriod = 30;
       function renderAnalytics() {
@@ -10099,53 +10224,6 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           ["Pôle de direction", 31, "🏰"],
           ["Étage de la présidence", 46, "🌌"],
         ];
-        const items = [
-          {
-            id: "blade",
-            name: "Dossier SQE certifié",
-            slot: "dossier",
-            bonus: "Force",
-            power: 3,
-            from: "will",
-            icon: "📋",
-          },
-          {
-            id: "cape",
-            name: "Veste du comité de direction",
-            slot: "tenue",
-            bonus: "Vitalité",
-            power: 3,
-            from: "night",
-            icon: "🧥",
-          },
-          {
-            id: "orb",
-            name: "Tableau de bord financier",
-            slot: "outil",
-            bonus: "Sagesse",
-            power: 3,
-            from: "four",
-            icon: "📊",
-          },
-          {
-            id: "shard",
-            name: "Badge d’accès Ensio",
-            slot: "badge",
-            bonus: "Énergie",
-            power: 2,
-            from: "gate",
-            icon: "🪪",
-          },
-          {
-            id: "crown",
-            name: "Stylo de la présidence",
-            slot: "signature",
-            bonus: "Force",
-            power: 5,
-            from: "master",
-            icon: "👑",
-          },
-        ];
         const bosses = [
           { id: "gate", name: "Richard · Entretien RH", hp: 65 },
           { id: "will", name: "Jean-Luc · Audit SQE", hp: 90 },
@@ -10200,66 +10278,8 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             return 0;
           }
         }
-        function scores() {
-          const map = {
-            Santé: "Vitalité",
-            Nutrition: "Énergie",
-            Sport: "Force",
-            Discipline: "Sagesse",
-          };
-          const out = {};
-          Object.entries(map).forEach(([m, stat]) => {
-            let xp = 0;
-            try {
-              xp = entries
-                .filter((e) => e.module === m)
-                .reduce((a, e) => a + (Number(e.xp) || 0), 0);
-            } catch (e) {}
-            out[stat] = Math.max(1, Math.floor(Math.max(0, xp) / 500) + 1);
-          });
-          items.forEach((i) => {
-            if (state.equipment[i.slot] === i.id && owned(i))
-              out[i.bonus] += i.power;
-          });
-          const system = window.rpgLifeSystem?.getState(),
-            mapBonus = {
-              Force: "Force",
-              Vitalité: "Vitalité",
-              Agilité: "Énergie",
-              Perception: "Sagesse",
-            };
-          for (const [key, value] of Object.entries(system?.points || {}))
-            if (mapBonus[key])
-              out[mapBonus[key]] += Math.max(0, Number(value) || 0);
-          const companion = window.rpgLifeSystem?.activeCompanion();
-          if (companion && mapBonus[companion.bonus])
-            out[mapBonus[companion.bonus]] += 2;
-          return out;
-        }
         function combatProfile() {
-          const stats = scores();
-          const damage = Math.max(
-            5,
-            Math.round(
-              5 +
-                stats.Force * 0.8 +
-                stats.Sagesse * 0.5 +
-                (stats.Vitalité - 1) * 0.5 +
-                (stats.Énergie - 1) * 0.5,
-            ),
-          );
-          return {
-            stats,
-            damage,
-            companion: window.rpgLifeSystem?.activeCompanion() || null,
-          };
-        }
-        function owned(i) {
-          try {
-            return !!dungeonClaims[i.from];
-          } catch (e) {
-            return false;
-          }
+          return { damage: 25, companion: null };
         }
         function achievements() {
           let e = [];
@@ -10311,7 +10331,6 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           const root = document.getElementById("rpgRoot");
           if (!root) return;
           const l = lvl(),
-            st = scores(),
             current = regions.filter((x) => l >= x[1]).at(-1) || regions[0];
           const visual = window.rpgLifeSystem?.visual(l) || {
               icon: "🧍",
@@ -10320,17 +10339,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             },
             daily = total(entries.filter((e) => e.date === today())),
             companion = window.rpgLifeSystem?.activeCompanion();
-          root.innerHTML = `<div class="rpg-panel" data-hunter-profile><h3>🧙 Profil de Rachid</h3><div class="system-stage"><div class="system-avatar tier${visual.stage - 1}">${visual.icon}</div><div><label>Nom du collaborateur <input id="rpgName" maxlength="32" value="${safe(state.name)}" style="background:#0a1729;border:1px solid #557398;border-radius:8px;color:white;padding:10px;max-width:100%;margin-left:8px"></label><p><span class="system-rank">ACCRÉDITATION ${safe(visual.rank)}</span> · Niveau ${l}</p><p class="system-muted">${safe(current[0])} · Accréditation visuelle ${visual.stage}/6</p></div></div><div class="system-grid"><div class="system-tile">Mission du jour<b>${daily} / 1 000 XP</b><div class="system-progress"><div style="width:${Math.min(100, Math.max(0, daily / 10))}%"></div></div><small>${daily >= 1000 ? "Mission parfaite" : daily >= 500 ? "Objectif quotidien atteint" : "Objectif conseillé : 500 XP"}</small></div><div class="system-tile">Allié actif<b>${safe(companion?.name || "Aucun")}</b><small>${companion ? "Bonus actif en soutenance : +2 " + safe(companion.bonus) : "Gagne une soutenance pour recruter un allié."}</small></div></div><p class="rpg-note">Tes caractéristiques RPG incluent le matériel et ton allié actif. Elles renforcent tes soutenances. Les quêtes restent personnalisables et facultatives.</p><div class="rpg-grid">${Object.entries(
-            st,
-          )
-            .map(
-              ([k, v]) =>
-                `<div class="rpg-card"><strong>${{ Vitalité: "❤️", Énergie: "✨", Force: "⚔️", Sagesse: "🔮" }[k]} ${k}</strong><div class="rpg-stat">${v}</div></div>`,
-            )
-            .join(
-              "",
-            )}</div>${window.rpgLifeSystem?.companionMarkup() || ""}</div>
-<div class="rpg-panel" data-inventory-panel><h3>💼 Matériel & accréditations</h3><p class="rpg-note">Matériel obtenu en terminant les défis de service. Un objet par emplacement. Les bonus renforcent tes soutenances, sans ajouter d’XP.</p><div class="rpg-grid">${items.map((i) => `<div class="rpg-card ${owned(i) ? "" : "locked"}"><strong>${i.icon} ${i.name}</strong><p>${i.slot} · +${i.power} ${i.bonus}</p><button data-rpg-equip="${i.id}" ${owned(i) ? "" : "disabled"}>${state.equipment[i.slot] === i.id ? "Retirer" : owned(i) ? "Équiper" : "Verrouillé"}</button></div>`).join("")}</div></div>
+          root.innerHTML = `<div class="rpg-panel" data-hunter-profile><h3>🧙 Profil de Rachid</h3><div class="system-stage"><div class="system-avatar tier${visual.stage - 1}">${visual.icon}</div><div><label>Nom du collaborateur <input id="rpgName" maxlength="32" value="${safe(state.name)}" style="background:#0a1729;border:1px solid #557398;border-radius:8px;color:white;padding:10px;max-width:100%;margin-left:8px"></label><p><span class="system-rank">ACCRÉDITATION ${safe(visual.rank)}</span> · Niveau ${l}</p><p class="system-muted">${safe(current[0])} · Accréditation visuelle ${visual.stage}/6</p></div></div><div class="system-grid"><div class="system-tile">Mission du jour<b>${daily} / 1 000 XP</b><div class="system-progress"><div style="width:${Math.min(100, Math.max(0, daily / 10))}%"></div></div><small>${daily >= 1000 ? "Mission parfaite" : daily >= 500 ? "Objectif quotidien atteint" : "Objectif conseillé : 500 XP"}</small></div></div><p class="rpg-note">Tes quêtes et tes séances font avancer l’histoire. Les rencontres se débloquent au fil des niveaux, sans caractéristiques ni accessoires à gérer.</p>${window.rpgLifeSystem?.companionMarkup() || ""}</div>
 <div class="rpg-panel"><h3>🗺️ Plan des services</h3><div class="rpg-path">${regions.map((r, i) => `<span class="${l >= r[1] ? "active" : ""}">${r[2]} ${r[0]}<br><small>Niveau ${r[1]} ${l >= r[1] ? "✓" : "🔒"}</small></span>${i < regions.length - 1 ? "→" : ""}`).join("")}</div><p class="rpg-note">Les services deviennent accessibles avec ton niveau global.</p></div>
 <div class="rpg-panel"><h3>🏅 Succès</h3><div class="rpg-grid">${achievements()
             .map(
@@ -10339,9 +10348,6 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             )
             .join("")}</div></div>
 `;
-          const inv = root.querySelector("[data-inventory-panel]");
-          const target = document.getElementById("inventoryHome");
-          if (inv && target) target.replaceChildren(inv);
           renderBosses();
           renderNarrative();
           document.dispatchEvent(new Event("ensio-rachid:panels"));
@@ -10349,10 +10355,9 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         function renderBosses() {
           const root = document.getElementById("rpgBosses");
           if (!root) return;
-          const st = scores(),
-            combat = combatProfile();
+          const combat = combatProfile();
           root.innerHTML =
-            '<div class="rpg-panel"><h3>🤝 Soutenances & comité de direction</h3><p class="rpg-note">Termine le défi d’un service pour accéder à sa soutenance. Présente tes arguments un par un : ton matériel et ton allié renforcent leur impact. Les résultats sont conservés.</p><p class="rpg-note">Défi de service → matériel → arguments renforcés → soutenance réussie → nouvel allié. Les soutenances ne donnent pas d’XP supplémentaire.</p><div class="rpg-grid">' +
+            '<div class="rpg-panel"><h3>🤝 Soutenances & comité de direction</h3><p class="rpg-note">Termine le défi d’un service pour accéder à sa soutenance. Présente tes arguments pour convaincre tes collègues. Chaque argument vaut 25 points de conviction, sans équipement à gérer.</p><p class="rpg-note">Défi de service → soutenance → nouveau contact. Les soutenances ne donnent pas d’XP supplémentaire.</p><div class="rpg-grid">' +
             bosses
               .map((b) => {
                 let unlocked = false;
@@ -10391,16 +10396,6 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 x.classList.toggle("active", x.dataset.tab === "rpg"),
               );
             document.querySelector(".topbar h1").textContent = "MA CARRIÈRE";
-            refresh();
-            return;
-          }
-          const equip = e.target.closest("[data-rpg-equip]");
-          if (equip) {
-            const i = items.find((x) => x.id === equip.dataset.rpgEquip);
-            if (!i || !owned(i)) return;
-            state.equipment[i.slot] =
-              state.equipment[i.slot] === i.id ? null : i.id;
-            persist();
             refresh();
             return;
           }
@@ -10829,10 +10824,10 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           }
         }
         function companionMarkup() {
-          return `<details class="v69-fold" data-profile-companions data-v69-fold="profile:companions"><summary>🌑 Réseau des services support</summary><div class="system-console"><p class="system-muted">Remporte les soutenances pour rencontrer tes alliés des services support. Un seul allié actif à la fois.</p><div class="system-grid">${companions
+          return `<details class="v69-fold" data-profile-companions data-v69-fold="profile:companions"><summary>🌑 Réseau des services support</summary><div class="system-console"><p class="system-muted">Remporte les soutenances pour rencontrer tes alliés des services support. Ces contacts accompagnent ton aventure, sans bonus de caractéristiques.</p><div class="system-grid">${companions
             .map((c) => {
               let ok = victory(c.boss);
-              return `<div class="system-tile ${ok ? "" : "system-locked"}"><b>${ok ? c.icon : "🔒"} ${ok ? c.name : "Contact à rencontrer"}</b><p class="system-muted">${ok ? "Bonus de soutenance : +2 " + c.bonus : "Remporter la soutenance associée"}</p><button class="system-button" data-sys-companion="${c.id}" ${ok ? "" : "disabled"}>${sys.active === c.id ? "Retirer" : "Solliciter"}</button></div>`;
+              return `<div class="system-tile ${ok ? "" : "system-locked"}"><b>${ok ? c.icon : "🔒"} ${ok ? c.name : "Contact à rencontrer"}</b><p class="system-muted">${ok ? "Contact rencontré" : "Remporter la soutenance associée"}</p></div>`;
             })
             .join("")}</div></div></details>`;
         }
@@ -11299,26 +11294,27 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               options.open = openState.get(options.dataset.easyFold) ?? false;
               options.innerHTML = "<summary>⚙️ Options de l’exercice</summary>";
               if (actions) options.append(actions);
-              if (extras.length) {
-                const list = document.createElement("div");
-                list.className = "sport-actions";
-                extras.forEach((b, j) => {
-                  b.textContent = "Retirer la série " + (j + 1);
-                  list.append(b);
-                });
-                options.append(list);
-              }
-              const ex = sport.active.exercises[i],
-                next = ex.sets.findIndex((s) => !s.done),
-                button = document.createElement("button");
-              button.type = "button";
-              button.className = "primary easy-validate";
-              button.dataset.easyValidate = String(i);
-              button.textContent =
-                next < 0
-                  ? "→ Exercice suivant"
-                  : "✓ Valider la série " + (next + 1);
-              el.append(button, options);
+              extras.forEach((b) => b.remove());
+              options
+                .querySelectorAll(
+                  '[data-sport="completeExercise"],[data-sport="uncheckExercise"]',
+                )
+                .forEach((b) => b.remove());
+              const ex = sport.active.exercises[i];
+              const remove = document.createElement("button");
+              remove.type = "button";
+              remove.dataset.sport = "removeSet";
+              remove.dataset.index = String(i);
+              remove.dataset.set = String(ex.sets.length - 1);
+              remove.textContent = "− Série";
+              remove.title = "Retirer la dernière série";
+              remove.disabled = ex.sets.length <= 1;
+              const retire = actions?.querySelector(
+                '[data-sport="removeActiveEx"]',
+              );
+              if (retire) actions.insertBefore(remove, retire);
+              else (actions || options).append(remove);
+              el.append(options);
             }
             const finish = root.querySelector('[data-sport="finish"]');
             if (finish) {
@@ -11387,37 +11383,6 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             ...document.querySelectorAll("#trainingRoot details.sport-ex"),
           ];
         }
-        document.addEventListener("click", (e) => {
-          const b = e.target.closest("[data-easy-validate]");
-          if (!b || !sport.active) return;
-          const i = Number(b.dataset.easyValidate),
-            ex = sport.active.exercises[i];
-          if (!ex) return;
-          const j = ex.sets.findIndex((s) => !s.done);
-          if (j >= 0) ex.sets[j].done = true;
-          const done = ex.sets.every((s) => s.done);
-          if (done) {
-            let next = sport.active.exercises.findIndex(
-              (x, n) => n > i && x.sets.some((s) => !s.done),
-            );
-            if (next < 0)
-              next = sport.active.exercises.findIndex((x) =>
-                x.sets.some((s) => !s.done),
-              );
-            sportOpenExercise = next < 0 ? i : next;
-          } else sportOpenExercise = i;
-          if (sportSave()) {
-            notify(j >= 0 ? "Série enregistrée ✓" : "Exercice terminé ✓");
-            const target = document.querySelector(
-              '[data-easy-validate="' + sportOpenExercise + '"]',
-            );
-            target?.focus({ preventScroll: true });
-            if (done)
-              document
-                .querySelector("#trainingRoot details.sport-ex[open]")
-                ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-          }
-        });
         window.rpgLifeErgonomics = { sport: sportUI };
         sportUI(document.getElementById("trainingRoot"));
       })();</script
@@ -11548,7 +11513,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             role: "Sirine sort son arme : une réunion",
             line: "Tu avances, Rachid. Je l’ai remarqué. Ça ne veut pas dire que je vais te laisser prendre ma place tranquillement.",
             objective:
-              "Termine le défi du comité, équipe ton matériel puis présente tes arguments à Sirine.",
+              "Termine le défi du comité puis présente tes arguments à Sirine.",
             action: "Préparer le comité",
             route: "dungeons",
             boss: "night",
@@ -11590,8 +11555,8 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "Vie du bureau",
             level: 0,
             side: "Allié connecté",
-            tag: "Adore les nouvelles technologies",
-            line: "Tu veux que je te montre mon nouveau téléphone ? Après, on parlera de Lauriane. Ne fais pas cette tête, je te connais.",
+            tag: "Achète avant de savoir à quoi ça sert, conseille avant qu’on demande",
+            line: "J’ai acheté un nouveau truc. Je ne sais pas encore tout ce qu’il fait, mais je vais te montrer. Et après, avec Yan, on veut savoir ce que tu as dit à Lauriane.",
             objective:
               "Sébastien rejoint le récit dès le niveau 2 : il aide Rachid à comprendre la passation de Dalia et tente de lui simplifier la vie sentimentale.",
             action: "Mes quêtes",
@@ -11600,12 +11565,12 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           {
             id: "dalia",
             name: "Dalia",
-            job: "Ancienne collègue, partie de la société",
+            job: "Ancienne alternante, partie de la société",
             service: "Passerelle",
             level: 4,
             side: "La passation mystérieuse",
-            tag: "Une ancienne collègue à recontacter",
-            line: "Tu as retrouvé le dossier ? J’aimerais bien savoir ce que vous allez en faire. Pose tes questions, je te répondrai quand je peux.",
+            tag: "Répond trois jours après avec deux mots",
+            line: "Oui. Mercredi. Comment ça, vous avez cherché un sens caché ? Ça veut juste dire qu’on peut se voir mercredi.",
             objective:
               "Dalia apparaît progressivement dans la campagne. Son départ et le projet Passerelle constituent une intrigue entièrement fictive.",
             action: "Mes quêtes",
@@ -11619,7 +11584,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 0,
             side: "Le protagoniste",
             tag: "Veut progresser, un peu trop pressé",
-            line: "Je viens d’arriver, mais j’aimerais bien devenir chef un jour. Oui, je sais, il faut déjà que je fasse mon travail.",
+            line: "Lauriane et moi, on est arrivés le même jour. On se dispute souvent, mais j’aime bien être avec elle. Seb et Yan ? Ils sont déjà au courant, ils ne me lâchent pas.",
             objective:
               "Ton aventure commence dans Quêtes : adapte les habitudes à ton quotidien.",
             action: "Mes quêtes",
@@ -11632,10 +11597,10 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "Coaching",
             level: 0,
             side: "Allié fidèle",
-            tag: "Son ami et son coach",
-            line: "Tu viens à la salle ce soir ? Dis-moi ce que tu as fait la dernière fois et on regarde ta séance. Et note tes séries, cette fois.",
+            tag: "Coupe les discussions de filles pour faire terminer les séries",
+            line: "Oui, raconte-nous après. Là, termine ta série, ça fait cinq minutes que tu parles. Seb, toi aussi tu peux te lever, ce n’est pas un salon ici.",
             objective:
-              "Yan t’accompagne dès le début dans le récit. Il devient un allié équipable après la soutenance RH. Tes séances restent dans le module Entraînement.",
+              "Yan t’accompagne dès le début dans le récit. Il rejoint ton réseau après la soutenance RH. Tes séances restent dans le module Entraînement.",
             action: "M’entraîner avec Yan",
             route: "training",
           },
@@ -11646,8 +11611,8 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "RH",
             level: 0,
             side: "Rivale… et faible secret de Rachid",
-            tag: "Sa rivale aux RH",
-            line: "Tu veux devenir chef ? Moi aussi. On va voir lequel de nous deux avance le plus vite. Ne compte pas sur moi pour te laisser gagner.",
+            tag: "Transforme tout en compétition avec Rachid",
+            line: "Même jour d’arrivée, même temps pour apprendre. Si je finis avant toi, tu ne pourras pas trouver d’excuse. Tu veux un coup de main ? Je te le rappellerai juste toute la semaine.",
             objective:
               "Dans cette comédie fictive, Lauriane vise le même fauteuil et Rachid cache son attirance derrière leur rivalité. Aucun bonus ni malus d’XP.",
             action: "Avancer dans mes quêtes",
@@ -11660,8 +11625,8 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "Vie du bureau",
             level: 0,
             side: "Team Rachid · Romance fictive",
-            tag: "Aimerait se rapprocher de Rachid",
-            line: "Tu me plais, Rachid. Voilà, je préfère te le dire. Par contre, je vois bien que tu regardes souvent Lauriane.",
+            tag: "Trouve toujours une raison de passer voir Rachid",
+            line: "Je passais te demander quelque chose. Non, je ne sais plus quoi. Je venais surtout te voir. Et tu peux passer cinq minutes sans me parler de Lauriane ?",
             objective:
               "Intrigue romantique entièrement imaginée : Rizlene craque pour Rachid, qui ne sait plus où regarder quand Lauriane entre. Retrouve leurs échanges dans les scènes du bureau.",
             action: "Mes quêtes",
@@ -11744,8 +11709,8 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "SQE",
             level: 10,
             side: "Le premier grand obstacle",
-            tag: "Le reprend souvent sur son travail",
-            line: "Je veux du travail correct. Tu peux ne pas aimer mes remarques, mais essaie au moins de les lire avant de répondre.",
+            tag: "Quand tout est juste, cherche encore quelque chose à reprendre",
+            line: "C’est correct. Tu n’es pas obligé d’avoir l’air aussi fier. Et ne commence pas à raconter partout que j’ai dit que tu avais raison.",
             objective:
               "Termine le défi SQE pour accéder à sa soutenance. Une victoire reste une victoire, même tamponnée en trois exemplaires.",
             action: "Voir l’audit SQE",
@@ -11758,10 +11723,9 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "Parc véhicules",
             level: 10,
             side: "Allié direct",
-            tag: "Parle franchement",
-            line: "Va droit au but, Rachid. Dis-moi ce qu’il te faut et ce que tu as déjà vérifié. Le reste, on verra après.",
-            objective:
-              "Lionel devient un allié équipable après la soutenance SQE. Son bonus renforce uniquement tes soutenances.",
+            tag: "Parle en deux phrases, propose de la boxe pour la suite",
+            line: "Vous en parlez depuis vingt minutes. Essaie, tu vas voir tout de suite. Et si tu veux continuer à discuter, tu pourras le faire après la boxe.",
+            objective: "Lionel rejoint ton réseau après la soutenance SQE.",
             action: "Voir les défis",
             route: "dungeons",
           },
@@ -11800,8 +11764,8 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "Contrôle de gestion",
             level: 20,
             side: "Allié des chiffres",
-            tag: "Aime les chiffres et les vannes",
-            line: "Montre-moi les chiffres. Après, on verra si ton idée tient la route ou si tu étais surtout très content de l’avoir.",
+            tag: "Sort les chiffres, puis attend de voir Rachid se défendre",
+            line: "Tu dis que tu as presque fini ? Viens, regarde la liste. Non, prends ton temps pour répondre, j’aime bien voir comment tu vas expliquer ça.",
             objective:
               "Convaincs Florian après le projet transverse pour bénéficier de son regard affûté en soutenance.",
             action: "Voir la revue budgétaire",
@@ -11828,10 +11792,10 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "Communication",
             level: 26,
             side: "Alliée créative",
-            tag: "Des idées, mais peu de budget",
-            line: "J’ai plein d’idées. J’aimerais juste avoir de quoi en faire quelques-unes. Si tu deviens chef, tu penseras à mon budget ?",
+            tag: "Revient à son budget dès que quelqu’un achète quelque chose",
+            line: "Vous avez acheté quoi, encore ? Très bien. Moi, je demande toujours les moyens de faire mon travail. J’aimerais bien qu’on m’écoute aussi quand je parle d’autre chose que de ma tête.",
             objective:
-              "Athéna rejoint les alliés équipables après le comité de Sirine. Son argumentaire compense très bien un budget miniature.",
+              "Dans cette caricature fictive, Athéna est considérée comme la plus belle femme d’Ensio. Elle prend progressivement des responsabilités dans la communication du projet, pour son travail.",
             action: "Voir le comité de direction",
             route: "dungeons",
           },
@@ -11870,10 +11834,10 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "Direction",
             level: 35,
             side: "Antagoniste de l’ascension",
-            tag: "Ne lui facilite pas la vie",
-            line: "Tu veux aller vite, je l’ai compris. Maintenant, montre-moi que tu sais finir ce que tu commences. Après, on parlera de promotion.",
+            tag: "Attend que Rachid prenne confiance pour le faire redescendre",
+            line: "Tu as l’air content de toi, Rachid. Très bien. Assieds-toi, je n’ai pas encore commencé à poser mes questions.",
             objective:
-              "Le comité de Sirine est un vrai défi du jeu. Prépare ton matériel et tes alliés pour défendre ton projet.",
+              "Le comité de Sirine est un vrai défi du jeu. Prépare tes arguments pour défendre ton projet.",
             action: "Préparer le comité",
             route: "dungeons",
           },
@@ -11884,12 +11848,40 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             service: "Direction générale",
             level: 50,
             side: "Le défi du dernier étage",
-            tag: "Le taquine et raconte ses histoires",
-            line: "Tu veux mon poste ? Tu pourrais attendre que je parte ! Bon, viens me montrer ce que tu sais faire, on va déjà commencer par là.",
+            tag: "Raconte toujours la même histoire de camionnette",
+            line: "En 1998, j’ai poussé une camionnette tout seul jusqu’au garage. Attends, je ne t’ai pas raconté ? Bon, assieds-toi, je te la refais.",
             objective:
               "Dans le jeu, remporte sa soutenance et atteins le niveau 61 pour décrocher le titre de PDG.",
             action: "Préparer la soutenance finale",
             route: "dungeons",
+          },
+          {
+            id: "quentin-k",
+            name: "Quentin K",
+            job: "Conducteur de travaux · Personnage fictif",
+            service: "Travaux",
+            level: 23,
+            side: "Le vantard que les autres recadrent",
+            tag: "Veut toujours raconter ses exploits imaginés",
+            line: "Vous voulez que je vous raconte ma soirée ? Comment ça, non ? Bon, d’accord, j’ai compris, on parle du chantier.",
+            objective:
+              "Caricature inventée, sans prétendre rapporter des faits réels : Quentin est vantard et insistant. Les collègues lui disent d’arrêter quand une personne ne veut pas l’écouter.",
+            action: "Mes quêtes",
+            route: "quests",
+          },
+          {
+            id: "chloe",
+            name: "Chloé",
+            job: "Nouvelle alternante RH",
+            service: "RH",
+            level: 14,
+            side: "Une collègue sympa, sans rivalité avec Lauriane",
+            tag: "Cuisine des muffins que tout le monde adore",
+            line: "J’ai apporté des muffins. Oui, Rachid, tu peux en prendre. Mais tu en laisses pour les autres. Et non, ce n’est pas pour gagner une promotion, j’aime juste cuisiner.",
+            objective:
+              "Chloé travaille aux RH comme Lauriane. Elles s’entendent bien sans compétition. Les pâtisseries de Chloé reviennent dans les pauses et les moments importants de l’histoire.",
+            action: "Mes quêtes",
+            route: "quests",
           },
         ];
         const castEncounters = people.map((p) => ({
@@ -11963,12 +11955,12 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         roster.className = "v69-fold";
         roster.id = "ensioPeople";
         roster.innerHTML =
-          '<summary>👥 Collègues, alliés & rivalités · 22 personnages</summary><div class="ensio-people-intro">Comédie fictive : portraits, rivalités et romances sont romancés. Les rencontres se révèlent au fil des niveaux ; les dialogues ne donnent ni bonus ni malus d’XP.</div><div class="ensio-people-grid"></div>';
+          '<summary>👥 Collègues, alliés & rivalités · 24 personnages</summary><div class="ensio-people-intro">Comédie fictive : portraits, rivalités et romances sont romancés. Les rencontres se révèlent au fil des niveaux ; les dialogues ne donnent ni bonus ni malus d’XP.</div><div class="ensio-people-grid"></div>';
         tower.after(roster);
         const about = document.createElement("details");
         about.className = "v69-fold";
         about.innerHTML =
-          '<summary>🏢 À propos de cette édition Ensio</summary><div style="padding:18px;line-height:1.7;font-size:14px"><p>Une aventure personnelle et fictive pour Rachid, alternant SQE chez Ensio Est. Les rencontres et situations sont romancées ; cette application n’est pas un outil officiel de l’entreprise.</p><p><strong>Objectif PDG :</strong> atteindre le niveau 61 et remporter la soutenance d’Hervé. Les quêtes font progresser ton niveau ; les défis débloquent matériel, soutenances et alliés. Les dialogues ne donnent pas d’XP.</p><p>Les 17 quêtes de départ sont personnalisables. Les plafonds et les seuils d’XP de RPG Life sont conservés. La musculation est intégrée au module Entraînement.</p><p>Cette édition possède ses propres sauvegardes et commence sans les données de RPG Life. Héberge ce fichier index.html dans un dépôt GitHub Pages distinct pour conserver les deux applications.</p></div>';
+          '<summary>🏢 À propos de cette édition Ensio</summary><div style="padding:18px;line-height:1.7;font-size:14px"><p>Une aventure personnelle et fictive pour Rachid, alternant SQE chez Ensio Est. Les rencontres et situations sont romancées ; cette application n’est pas un outil officiel de l’entreprise.</p><p><strong>Objectif PDG :</strong> atteindre le niveau 61 et remporter la soutenance d’Hervé. Les quêtes font progresser ton niveau ; les défis débloquent les soutenances et de nouveaux contacts. Les dialogues ne donnent pas d’XP.</p><p>Les 17 quêtes de départ sont personnalisables. Les plafonds et les seuils d’XP de RPG Life sont conservés. La musculation est intégrée au module Entraînement.</p><p>Cette édition possède ses propres sauvegardes et commence sans les données de RPG Life. Héberge ce fichier index.html dans un dépôt GitHub Pages distinct pour conserver les deux applications.</p></div>';
         document.getElementById("settings").append(about);
         let selected = null;
         function showEncounter(ch) {
@@ -12178,6 +12170,15 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             selected = c.id;
             window.rpgLifeNavigation.go("rpg");
             renderCareer();
+            // The portrait lives in a folded section: reveal it before scrolling.
+            for (
+              let parent = story.parentElement;
+              parent;
+              parent = parent.parentElement
+            )
+              if (parent.matches("details")) parent.open = true;
+            story.setAttribute("tabindex", "-1");
+            story.focus({ preventScroll: true });
             story.scrollIntoView({ behavior: "smooth", block: "start" });
             return;
           }
@@ -12268,6 +12269,12 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Richard",
                 "Viens, je te montre. Pour son bureau, on verra plus tard.",
               ],
+              [
+                "Hervé",
+                "En 1998, j’ai poussé une camionnette tout seul jusqu’au garage.",
+              ],
+              ["Rachid", "Vous me l’avez raconté hier."],
+              ["Hervé", "Ah bon ? Je vais faire court, alors."],
             ],
             choices: [
               [
@@ -12327,16 +12334,17 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             title: "Lauriane, alternante RH… et longueur d’avance",
             cast: "Lauriane · Rachid",
             lines: [
+              ["Lauriane", "Salut. Lauriane, je commence aux RH aujourd’hui."],
+              [
+                "Rachid",
+                "Rachid, je commence au SQE. C’est aussi mon premier jour.",
+              ],
               [
                 "Lauriane",
-                "Salut, moi c'est Lauriane. Je suis alternante aux RH.",
+                "Très bien. Comme ça, quand je serai promue avant toi, tu ne pourras pas dire que j’avais de l’avance.",
               ],
-              ["Rachid", "Rachid. Je suis au SQE."],
-              [
-                "Lauriane",
-                "Je sais. C'est toi qui veux devenir patron. Je te préviens, moi aussi.",
-              ],
-              ["Rachid", "Bon. Au moins, je ne vais pas m'ennuyer."],
+              ["Rachid", "On vient de se rencontrer et tu me fatigues déjà."],
+              ["Lauriane", "Tu vas vite t’habituer."],
             ],
             choices: [
               [
@@ -12472,7 +12480,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             id: "parc",
             level: 6,
             title: "Le parc ferme avant le parking du PDG",
-            cast: "Lionel · Rachid · Sébastien",
+            cast: "Lionel · Rachid · Sébastien · Yan",
             lines: [
               [
                 "Lionel",
@@ -12484,6 +12492,17 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sébastien",
                 "Je sens qu'on va encore me demander de faire plus gros.",
               ],
+              [
+                "Lionel",
+                "Après le boulot, j’ai deux paires de gants. Qui veut faire un peu de boxe ?",
+              ],
+              ["Sébastien", "Au bureau ?"],
+              [
+                "Lionel",
+                "Dans la grande salle. On pousse les chaises, on fait doucement, et ceux qui n’ont pas envie regardent.",
+              ],
+              ["Rachid", "Je veux bien regarder."],
+              ["Yan", "Tu as répondu avant qu’il te pose la question."],
             ],
             choices: [
               [
@@ -12574,7 +12593,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             id: "com",
             level: 20,
             title: "La campagne “Rachid président”",
-            cast: "Athéna · Rachid · Florian",
+            cast: "Athéna · Rachid · Florian · Sébastien · Yan",
             lines: [
               [
                 "Athéna",
@@ -12586,6 +12605,17 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Alors commence par écrire qu'on ne peut pas tout faire gratuitement.",
               ],
               ["Florian", "Je vais finir par connaître cette phrase par cœur."],
+              ["Athéna", "Et vous trois, vous m’écoutez ou pas ?"],
+              ["Sébastien", "Oui. Enfin, Rachid, on ne sait pas."],
+              [
+                "Rachid",
+                "Tu peux arrêter de me dénoncer devant tout le monde ?",
+              ],
+              [
+                "Yan",
+                "Tu la trouves belle, on a compris. Maintenant, réponds à sa question.",
+              ],
+              ["Athéna", "Merci, Yan. Donc : mon budget."],
             ],
             choices: [
               [
@@ -12707,6 +12737,139 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Dis-nous clairement ce que tu attends.",
                 "Sirine",
                 "D’accord. On se met d’accord maintenant, comme ça tu ne pourras pas dire que tu ne savais pas.",
+              ],
+            ],
+            after: [],
+          },
+          {
+            id: "chloe-muffins",
+            level: 14,
+            title: "Ne touche pas au dernier muffin",
+            cast: "Chloé · Rachid · Lauriane · Sirine",
+            lines: [
+              ["Chloé", "Il en reste un. Quelqu’un en veut ?"],
+              ["Rachid", "Moi."],
+              ["Lauriane", "Tu en as déjà mangé trois."],
+              ["Sirine", "Le dernier est pour moi."],
+              [
+                "Rachid",
+                "Je savais que tu finirais par me bloquer quelque part.",
+              ],
+            ],
+            choices: [
+              [
+                "Je le coupe en deux.",
+                "Chloé",
+                "Voilà. Vous pouvez aussi partager sans que je vous le dise.",
+              ],
+              [
+                "D’accord, je te le laisse.",
+                "Sirine",
+                "Tu vois, tu sais prendre une bonne décision.",
+              ],
+              [
+                "Chloé, c’était quoi ta recette ?",
+                "Chloé",
+                "Je te la donne. Mais tu les apportes la prochaine fois.",
+              ],
+            ],
+            after: [],
+          },
+          {
+            id: "quentin-recadre",
+            level: 23,
+            title: "Quentin change de sujet",
+            cast: "Quentin K · Chloé · Lauriane · Rachid",
+            lines: [
+              ["Quentin K", "Si tu veux, je peux t’écrire après le travail."],
+              ["Chloé", "Non. Je te l’ai déjà dit."],
+              ["Quentin K", "Tu pourrais au moins…"],
+              ["Lauriane", "Non, Quentin. Tu n’insistes pas."],
+              ["Rachid", "On change de sujet."],
+            ],
+            choices: [
+              [
+                "Elle a répondu. Tu la laisses.",
+                "Quentin K",
+                "D’accord. J’arrête.",
+              ],
+              [
+                "On était en train de parler du chantier.",
+                "Lauriane",
+                "Très bien. Et on va s’en tenir à ça.",
+              ],
+              [
+                "Chloé, tu voulais nous montrer quelque chose ?",
+                "Chloé",
+                "Oui. Merci. On peut reprendre ?",
+              ],
+            ],
+            after: [],
+          },
+          {
+            id: "lionel-boxe",
+            level: 36,
+            title: "Lionel a déplacé les chaises",
+            cast: "Lionel · Rachid · Sébastien · Yan · Sirine",
+            lines: [
+              ["Lionel", "Les gants sont là. Qui essaie ?"],
+              ["Rachid", "Je viens soutenir les collègues."],
+              ["Sébastien", "Je mesure les temps."],
+              ["Yan", "Moi, je veux bien essayer."],
+              ["Sirine", "Moi, je veux récupérer les chaises après."],
+            ],
+            choices: [
+              [
+                "Je regarde la première fois.",
+                "Lionel",
+                "Très bien. Tu peux regarder sans inventer une excuse.",
+              ],
+              [
+                "Yan, je t’encourage.",
+                "Yan",
+                "Merci. Tu pourras aussi ranger une chaise après.",
+              ],
+              [
+                "Seb, tu vas vraiment tout mesurer ?",
+                "Sébastien",
+                "J’ai acheté la montre. Il faut bien qu’elle serve.",
+              ],
+            ],
+            after: [],
+          },
+          {
+            id: "trio-femmes",
+            level: 14,
+            title: "Rachid a encore besoin d’un conseil",
+            cast: "Rachid · Sébastien · Yan",
+            lines: [
+              ["Rachid", "Lauriane m’a dit de la laisser travailler."],
+              ["Sébastien", "Tu lui as demandé quoi ?"],
+              [
+                "Rachid",
+                "Si elle avait besoin d’aide. Pour la troisième fois.",
+              ],
+              ["Yan", "Donc laisse-la travailler."],
+              [
+                "Sébastien",
+                "Tu peux revenir nous raconter quand elle t’aura vraiment demandé quelque chose.",
+              ],
+            ],
+            choices: [
+              [
+                "Vous pourriez être un peu plus encourageants.",
+                "Yan",
+                "On t’aide. C’est juste pas la réponse que tu voulais.",
+              ],
+              [
+                "D’accord, j’arrête de passer à son bureau.",
+                "Sébastien",
+                "Au moins jusqu’à la prochaine pause. Essaie.",
+              ],
+              [
+                "On va à la salle plutôt ?",
+                "Yan",
+                "Oui. Et là-bas, tu termines ta série avant de reparler de Lauriane.",
               ],
             ],
             after: [],
@@ -12948,16 +13111,23 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             title: "Deux alternants, un fauteuil",
             act: "Le badge et le message",
             lines: [
+              ["Lauriane", "Salut. Lauriane, je commence aux RH aujourd’hui."],
+              [
+                "Rachid",
+                "Rachid, je commence au SQE. C’est aussi mon premier jour.",
+              ],
               [
                 "Lauriane",
-                "Salut, moi c'est Lauriane. Je suis alternante aux RH.",
+                "Très bien. Comme ça, quand je serai promue avant toi, tu ne pourras pas dire que j’avais de l’avance.",
               ],
-              ["Rachid", "Rachid. Je suis au SQE."],
+              ["Rachid", "On vient de se rencontrer et tu me fatigues déjà."],
+              ["Lauriane", "Tu vas vite t’habituer."],
+              ["Lauriane", "Au fait, tu fais du sport ? Moi, j’adore ça."],
+              ["Rachid", "De la muscu, surtout."],
               [
                 "Lauriane",
-                "Je sais. C'est toi qui veux devenir patron. Je te préviens, moi aussi.",
+                "Alors on aura aussi un endroit où je pourrai te battre après le boulot.",
               ],
-              ["Rachid", "Bon. Au moins, je ne vais pas m'ennuyer."],
             ],
             mode: "rival",
           },
@@ -12974,6 +13144,12 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Et t'as souri pendant les trente secondes. Je te connais.",
               ],
               ["Rachid", "Occupe-toi de ta nouvelle montre, s'il te plaît."],
+              [
+                "Yan",
+                "Seb, laisse-le au moins apprendre son prénom avant de lui préparer son mariage.",
+              ],
+              ["Sébastien", "Tu as vu son sourire ? Je suis déjà en retard."],
+              ["Rachid", "Vous êtes insupportables tous les deux."],
             ],
             mode: "tech",
           },
@@ -12990,6 +13166,18 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Je t'invite et toi tu me demandes où est Lauriane. T'es sérieux ?",
               ],
               ["Hervé", "Ah oui, là, même moi j'aurais fait mieux."],
+              [
+                "Sébastien",
+                "Yan, viens. Il vient encore de parler de Lauriane à Rizlene.",
+              ],
+              [
+                "Yan",
+                "Tu n’es pas obligé de lui annoncer tout ce qui te passe par la tête, Rachid.",
+              ],
+              [
+                "Rachid",
+                "Et vous n’êtes pas obligés d’arriver à chaque fois que je parle à une fille.",
+              ],
             ],
             mode: "romance",
           },
@@ -13001,17 +13189,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             lines: [
               [
                 "Amélie · Gestion RH",
-                "Tu peux ranger ce dossier ? C'était celui de Dalia, elle ne travaille plus ici.",
+                "Ce dossier était à Dalia, notre ancienne alternante. Elle est partie avant de le terminer.",
               ],
-              ["Rachid", "Il y a encore des choses à faire dedans ?"],
+              ["Rachid", "Ah oui, Dalia… Je me souviens d’elle."],
+              ["Sébastien", "Tu parles. Tu la trouvais super mignonne."],
               [
-                "Amélie · Gestion RH",
-                "Oui, je crois. Elle avait commencé un truc pour aider les nouveaux.",
+                "Yan",
+                "Vous pouvez regarder le dossier avant de refaire son portrait ?",
               ],
-              [
-                "Sébastien",
-                "Ouvre-le. Pour une fois qu'on trouve autre chose qu'une vieille facture.",
-              ],
+              ["Rachid", "Voilà. Merci, Yan."],
+              ["Yan", "Je n’ai pas dit que tu ne la trouvais pas mignonne."],
             ],
             mode: "dalia",
           },
@@ -13030,6 +13217,19 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               [
                 "Rachid",
                 "Ça me va. Par contre, tu me laisses choisir la musique.",
+              ],
+              [
+                "Lauriane",
+                "Je peux venir avec vous ? J’ai prévu une séance ce soir.",
+              ],
+              [
+                "Yan",
+                "Bien sûr. Mais Rachid choisit la musique, pas les temps de repos.",
+              ],
+              ["Rachid", "Pourquoi vous précisez ça en me regardant ?"],
+              [
+                "Lauriane",
+                "Parce que tu parles déjà beaucoup et qu’on n’a pas commencé.",
               ],
             ],
             mode: "fitness",
@@ -13071,6 +13271,14 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               [
                 "Hervé",
                 "Laisse-le s'installer avant de lui faire peur, Sirine.",
+              ],
+              [
+                "Hervé",
+                "Ça me rappelle 1998, quand j’ai poussé une camionnette tout seul jusqu’au garage.",
+              ],
+              [
+                "Sirine",
+                "Hervé, je te préviens, on a autre chose à faire cet après-midi.",
               ],
             ],
             mode: "director",
@@ -13129,6 +13337,14 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Non. Seulement les choses que tu proposes avant d'y avoir réfléchi.",
               ],
               ["Sirine", "Il fallait bien que quelqu'un lui dise."],
+              [
+                "Rachid",
+                "Donc mon idée est bonne. Je commence à être pas mal ici.",
+              ],
+              [
+                "Sirine",
+                "Tu viens d’avoir une idée. Attends un peu avant de choisir la couleur de mon bureau.",
+              ],
             ],
             mode: "duel",
           },
@@ -13191,6 +13407,17 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Alors commence par écrire qu'on ne peut pas tout faire gratuitement.",
               ],
               ["Florian", "Je vais finir par connaître cette phrase par cœur."],
+              ["Athéna", "Et vous trois, vous m’écoutez ou pas ?"],
+              ["Sébastien", "Oui. Enfin, Rachid, on ne sait pas."],
+              [
+                "Rachid",
+                "Tu peux arrêter de me dénoncer devant tout le monde ?",
+              ],
+              [
+                "Yan",
+                "Tu la trouves belle, on a compris. Maintenant, réponds à sa question.",
+              ],
+              ["Athéna", "Merci, Yan. Donc : mon budget."],
             ],
             mode: "budget",
           },
@@ -13207,6 +13434,17 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Tu m'as envoyé deux mails qui étaient pour elle, cette semaine.",
               ],
               ["Rachid", "Bon. Je vais faire semblant de ne pas avoir dit ça."],
+              [
+                "Chloé",
+                "Bonjour, moi c’est Chloé. Je viens d’arriver aux RH. J’ai apporté des muffins.",
+              ],
+              [
+                "Lauriane",
+                "Moi c’est Lauriane. Enfin une personne qui ne commence pas par me parler de promotion.",
+              ],
+              ["Rachid", "Tu en as fait combien ?"],
+              ["Chloé", "Assez, si tu en laisses aux autres."],
+              ["Sirine", "Rachid, elle vient d’arriver. Lâche le troisième."],
             ],
             mode: "team",
           },
@@ -13245,6 +13483,12 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Je vois que tout le monde connaît déjà ses habitudes d'achat.",
               ],
+              ["Hervé", "Quand j’ai poussé ma camionnette en 1998…"],
+              [
+                "Sylvie",
+                "Oui, jusqu’au garage. Ça ne remplace toujours pas un justificatif.",
+              ],
+              ["Hervé", "Vous pourriez au moins me laisser raconter la fin."],
             ],
             mode: "budget",
           },
@@ -13264,6 +13508,38 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Tu peux arrêter de regarder derrière moi ? Elle ne va pas apparaître parce que tu insistes.",
               ],
               ["Rachid", "Désolé. Là, je suis vraiment avec toi."],
+              [
+                "Rachid",
+                "Seb, Yan… Je viens encore de dire un truc idiot à Rizlene.",
+              ],
+              ["Sébastien", "C’est lequel, cette fois ?"],
+              [
+                "Yan",
+                "Laisse-nous deviner : elle t’a parlé d’elle, tu as parlé de Lauriane.",
+              ],
+              ["Rachid", "Je déteste quand vous devinez aussi vite."],
+              [
+                "Rizlene",
+                "Au fait, je passais juste te demander où est l’imprimante.",
+              ],
+              ["Rachid", "Tu viens de t’en servir."],
+              [
+                "Rizlene",
+                "Oui. Bon. Je venais te voir. Tu préfères que je le dise comme ça ?",
+              ],
+              [
+                "Lauriane",
+                "Jeudi, tu retournes à la salle ? On pourrait faire une séance ensemble.",
+              ],
+              ["Rachid", "Oui. Tu veux faire quoi ?"],
+              [
+                "Lauriane",
+                "M’entraîner. Pas te regarder discuter avec Seb entre chaque série.",
+              ],
+              [
+                "Sébastien",
+                "Moi, je comprends surtout qu’elle t’a proposé de te revoir.",
+              ],
             ],
             mode: "romance",
           },
@@ -13318,6 +13594,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ["Rachid", "Donc on commence par répondre à ça."],
               ["Sirine", "Oui. Et faites court, qu'on ait envie de le lire."],
               ["Hervé", "Elle vient aussi de me regarder. J'ai compris."],
+              ["Rachid", "Franchement, ça avance vite maintenant."],
+              [
+                "Sirine",
+                "Très bien. Tu vas pouvoir m’expliquer tout seul ce qui manque encore.",
+              ],
+              ["Rachid", "J’aurais dû me taire."],
+              [
+                "Hervé",
+                "Tu vas l’apprendre. Elle attend toujours que tu sois content.",
+              ],
             ],
             mode: "director",
           },
@@ -13339,6 +13625,29 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               [
                 "Christophe",
                 "Justement, essaie d'imaginer ce qu'on pourrait ne pas ajouter.",
+              ],
+              ["Sébastien", "J’ai aussi une appli pour les rencontres."],
+              ["Rachid", "Tu peux me montrer après ?"],
+              [
+                "Yan",
+                "Tu peux surtout parler à Lauriane sans demander à ton téléphone quoi dire.",
+              ],
+              [
+                "Sébastien",
+                "C’est exactement ce que dit l’appli. On est bons.",
+              ],
+              [
+                "Sébastien",
+                "J’ai acheté une montre aussi. Elle est incroyable.",
+              ],
+              ["Yan", "Tu l’utilises pour quoi ?"],
+              [
+                "Sébastien",
+                "Je suis encore en train de regarder ce qu’elle fait.",
+              ],
+              [
+                "Athéna",
+                "Tu as mis combien là-dedans ? Moi, pour un visuel, on me dit qu’on n’a pas d’argent.",
               ],
             ],
             mode: "tech",
@@ -13384,6 +13693,21 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Lauriane",
                 "Et parle doucement. Tout le monde ne vit pas dans ta tête.",
               ],
+              [
+                "Quentin K",
+                "Alors, vous voulez une de mes histoires avec les femmes ?",
+              ],
+              ["Chloé", "Non merci. Je suis là pour la formation."],
+              [
+                "Quentin K",
+                "Tu dis ça, mais tu pourrais au moins me donner ton numéro.",
+              ],
+              ["Lauriane", "Elle a dit non. Tu la laisses tranquille."],
+              [
+                "Yan",
+                "Quentin, viens plutôt t’asseoir là. On est venus écouter Catherine.",
+              ],
+              ["Quentin K", "Bon, bon. Vous êtes pas drôles aujourd’hui."],
             ],
             mode: "team",
           },
@@ -13441,6 +13765,23 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Écoute-la. Pour une fois, elle t'évite une belle honte.",
               ],
+              ["Chloé", "J’ai posé les muffins dans la salle de pause."],
+              ["Sirine", "Très bien. On termine ça dans cinq minutes."],
+              [
+                "Rachid",
+                "Tu vois, Lauriane, c’est comme ça qu’on fait finir une réunion.",
+              ],
+              [
+                "Lauriane",
+                "Ne parle pas trop fort, elle pourrait nous garder.",
+              ],
+              ["Rachid", "Je vais chercher mon muffin, alors."],
+              ["Sirine", "Les autres, oui. Toi, tu restes cinq minutes."],
+              ["Rachid", "Pourquoi moi ?"],
+              [
+                "Sirine",
+                "Parce que tu viens de dire que tout était prêt. Tu vas me montrer.",
+              ],
             ],
             mode: "director",
           },
@@ -13488,17 +13829,24 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             title: "Le retour de mail",
             act: "Les questions de Dalia",
             lines: [
-              [
-                "Dalia · Message",
-                "Bonjour Rachid. Richard m'a prévenue. Oui, on peut en parler. Dis-moi quand tu es disponible.",
-              ],
-              [
-                "Sébastien",
-                "Elle a répondu ! Tu vois, c'était plus rapide que tes mails à Lauriane.",
-              ],
+              ["Sébastien", "Dalia a répondu. Trois jours après."],
+              ["Rachid", "Elle a dit quoi ?"],
+              ["Sébastien", "“Oui. Mercredi.”"],
+              ["Yan", "Bon, vous avez une réponse."],
               [
                 "Rachid",
-                "Tu peux me laisser lire trois lignes sans parler d'elle ?",
+                "Mercredi pour nous voir ? Pour envoyer quelque chose ?",
+              ],
+              ["Sébastien", "Je lui ai demandé. On saura dans trois jours."],
+              [
+                "Lauriane",
+                "À la salle hier, tu as dit qu’il te restait une répétition. Il t’en restait trois.",
+              ],
+              ["Rachid", "Tu comptes même mes répétitions ?"],
+              ["Lauriane", "Seulement quand tu essaies de négocier."],
+              [
+                "Yan",
+                "Je vais enfin pouvoir arrêter de le surveiller tout seul.",
               ],
             ],
             mode: "dalia",
@@ -13519,6 +13867,23 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Dalia",
                 "J'imagine. Mais j'ai changé de travail, pas d'identité.",
               ],
+              [
+                "Dalia",
+                "Et vous, vous êtes toujours fourrés avec Seb dès qu’il faut parler d’une fille ?",
+              ],
+              [
+                "Yan",
+                "J’essaie de les rendre présentables. Ça prend du temps.",
+              ],
+              ["Rachid", "Tu es partie et tu te souviens encore de ça ?"],
+              ["Dalia", "C’est difficile à oublier."],
+              [
+                "Rachid",
+                "Tu sais qu’on a passé trois jours à se demander ce que voulait dire ton message ?",
+              ],
+              ["Dalia", "Ça voulait dire oui. Et mercredi."],
+              ["Sébastien", "On avait fait beaucoup plus compliqué que ça."],
+              ["Dalia", "J’avais remarqué."],
             ],
             mode: "dalia",
           },
@@ -13582,6 +13947,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rachid",
                 "Oui. Et je vais essayer de te répondre correctement.",
               ],
+              ["Sébastien", "Yan, viens, Rizlene lui parle vraiment là."],
+              ["Yan", "Alors on les laisse parler. Viens."],
+              [
+                "Rachid",
+                "Merci. Et non, je ne vous ferai pas un résumé en sortant.",
+              ],
+              ["Sébastien", "D’accord. On attendra le café."],
             ],
             mode: "romance",
           },
@@ -13620,6 +13992,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rachid",
                 "Tu peux me laisser profiter de ma motivation deux minutes ?",
               ],
+              ["Rachid", "Et sinon, Lauriane m’a dit un truc bizarre hier…"],
+              [
+                "Yan",
+                "Oui, mais termine ta série. Ça fait cinq minutes que tu parles.",
+              ],
+              ["Sébastien", "Tu me racontes pendant qu’il charge la barre."],
+              [
+                "Yan",
+                "Il charge la barre lui-même. Vous allez finir par passer la séance assis.",
+              ],
             ],
             mode: "fitness",
           },
@@ -13639,6 +14021,17 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sébastien",
                 "Je sens qu'on va encore me demander de faire plus gros.",
               ],
+              [
+                "Lionel",
+                "Après le boulot, j’ai deux paires de gants. Qui veut faire un peu de boxe ?",
+              ],
+              ["Sébastien", "Au bureau ?"],
+              [
+                "Lionel",
+                "Dans la grande salle. On pousse les chaises, on fait doucement, et ceux qui n’ont pas envie regardent.",
+              ],
+              ["Rachid", "Je veux bien regarder."],
+              ["Yan", "Tu as répondu avant qu’il te pose la question."],
             ],
             mode: "method",
           },
@@ -13699,6 +14092,23 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Oui. Et les miennes. Je ne suis pas obligée de te piéger tout le temps.",
               ],
               ["Rachid", "Tu pourrais prévenir quand tu décides d'être sympa."],
+              [
+                "Chloé",
+                "Vous êtes encore en train de compter qui a corrigé quoi ?",
+              ],
+              ["Lauriane", "Non. Enfin, plus maintenant."],
+              [
+                "Chloé",
+                "Venez goûter mes muffins. Ça vous occupera autrement.",
+              ],
+              [
+                "Rachid",
+                "Chloé, tu es probablement la personne la plus appréciée du service.",
+              ],
+              [
+                "Lauriane",
+                "Attention, elle travaille aussi très bien. Tu ne regardes que les gâteaux.",
+              ],
             ],
             mode: "rival",
           },
@@ -13715,6 +14125,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ["Rachid", "Je m'attendais à plus."],
               ["Sirine", "Tu veux que je continue à chercher ?"],
               ["Hervé", "Ne la provoque pas quand elle est de bonne humeur."],
+              [
+                "Hervé",
+                "J’avais eu le même problème avec ma camionnette, en 1998.",
+              ],
+              ["Sirine", "Non, Hervé. Ce n’est pas le même problème."],
+              ["Rachid", "On va quand même finir au garage, je le sens."],
+              ["Rachid", "Deux remarques seulement ? Je crois qu’on a réussi."],
+              ["Sirine", "Je n’avais pas fini de regarder."],
+              ["Rachid", "Bien sûr."],
+              ["Hervé", "Elle lui a même pas laissé le temps de sourire."],
             ],
             mode: "director",
           },
@@ -13794,6 +14214,19 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Catherine",
                 "Et moi, je vous aide à l'expliquer. Sans lire tout l'écran à voix haute.",
               ],
+              [
+                "Sébastien",
+                "Yan, Rachid avait encore oublié ce qu’il voulait demander à Athéna.",
+              ],
+              [
+                "Yan",
+                "C’est bon, on sait qu’elle est belle. Laisse-la expliquer ce qu’elle a préparé.",
+              ],
+              [
+                "Athéna",
+                "Oui. Et je vous préviens : les compliments ne paient pas l’impression.",
+              ],
+              ["Rachid", "On t’écoute. Vraiment, cette fois."],
             ],
             mode: "budget",
           },
@@ -13813,6 +14246,15 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Il a déjà essayé de me prouver trois choses ce matin. Ça doit fatiguer.",
               ],
+              [
+                "Lauriane",
+                "On baisse un peu la charge et on fait propre. Je reste avec toi.",
+              ],
+              ["Rachid", "Tu ne vas pas me traiter de fainéant ?"],
+              [
+                "Lauriane",
+                "Pour une nuit trop courte ? Non. Si tu racontes notre séance pendant vingt minutes avant de la faire, là oui.",
+              ],
             ],
             mode: "fitness",
           },
@@ -13829,6 +14271,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ["Rachid", "À côté de toi ?"],
               ["Lauriane", "Non, sur le parking. Évidemment, à côté de moi."],
               ["Rachid", "Oui. Pardon. Question idiote."],
+              [
+                "Sébastien",
+                "Yan, regarde, elle l’a fait asseoir à côté d’elle.",
+              ],
+              ["Yan", "Seb, il y a deux chaises. Arrête de commenter."],
+              ["Lauriane", "On vous entend."],
+              [
+                "Rachid",
+                "Voilà. Maintenant, vous pouvez partir tous les deux.",
+              ],
             ],
             mode: "rival",
           },
@@ -13845,6 +14297,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Bon, par contre, arrête de dire que tu ne regardes pas Lauriane. Tu es nul pour cacher ça.",
               ],
               ["Rachid", "Je sais. Sébastien me le rappelle assez souvent."],
+              ["Rachid", "J’ai enfin parlé clairement avec Rizlene."],
+              [
+                "Yan",
+                "Bien. Tu n’avais pas besoin de lui faire attendre trois semaines.",
+              ],
+              [
+                "Sébastien",
+                "Je range donc mon plan pour expliquer tes messages.",
+              ],
+              ["Rachid", "Tu avais vraiment fait un plan ?"],
             ],
             mode: "romance",
           },
@@ -13883,6 +14345,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ],
               ["Florian", "Attends. On ne t'a pas encore entendu présenter."],
               ["Rachid", "Vous pourriez me laisser dix secondes de bonheur."],
+              ["Rachid", "J’ai presque tout terminé."],
+              ["Florian", "Tu veux qu’on regarde la liste ensemble ?"],
+              ["Rachid", "Tu l’as déjà regardée, c’est ça ?"],
+              ["Florian", "Oui."],
+              [
+                "Rachid",
+                "Et tu attendais juste de voir ce que j’allais dire ?",
+              ],
+              ["Florian", "Oui."],
+              ["Sirine", "Continue, Rachid. On t’écoute."],
             ],
             mode: "budget",
           },
@@ -13902,6 +14374,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Et laisse-moi mon fauteuil pendant que tu parles. Je ne suis pas encore parti.",
               ],
+              ["Hervé", "Quand j’ai dû pousser ma camionnette, en 1998…"],
+              [
+                "Rachid",
+                "Tout seul, jusqu’au garage. Oui, je sais. Je peux commencer maintenant ?",
+              ],
+              ["Sirine", "Il connaît au moins un dossier par cœur."],
+              ["Hervé", "Tu as du répondant. Vas-y, je t’écoute."],
             ],
             mode: "director",
           },
@@ -14013,6 +14492,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Lionel",
                 "Oui. Mais pas en changeant mes phrases pour faire joli.",
               ],
+              [
+                "Quentin K",
+                "Moi, je vous ferais une présentation qui impressionne les filles.",
+              ],
+              ["Athéna", "On te demande de présenter le chantier, Quentin."],
+              ["Quentin K", "Je disais ça pour détendre."],
+              ["Sirine", "Alors essaie autre chose. Athéna, tu continues."],
             ],
             mode: "team",
           },
@@ -14023,11 +14509,22 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             act: "La soutenance",
             lines: [
               ["Sirine", "Vous avez fait du bon travail."],
-              ["Rachid", "Pardon ?"],
-              ["Sirine", "Tu m'as entendue. Ne me le fais pas répéter."],
+              ["Rachid", "Merci. Je commence à me sentir vraiment à ma place."],
+              [
+                "Sirine",
+                "Ne t’installe pas trop. J’ai encore trois questions.",
+              ],
+              [
+                "Rachid",
+                "Tu attends vraiment que je sois content pour faire ça ?",
+              ],
+              [
+                "Sirine",
+                "Oui. Tu réponds beaucoup plus vite quand tu veux le rester.",
+              ],
               [
                 "Hervé",
-                "Dommage, j'allais sortir mon téléphone pour garder une preuve.",
+                "Je vais le dire à tout le monde : elle vient de l’avouer.",
               ],
             ],
             mode: "director",
@@ -14045,6 +14542,23 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ["Rachid", "Oui."],
               ["Lauriane", "Tu vois ? Tu peux répondre simplement."],
               ["Rachid", "J'essaie. Ne me déconcentre pas maintenant."],
+              ["Rachid", "Seb, Yan… Elle m’a proposé un café. Tous les deux."],
+              ["Sébastien", "Enfin ! Tu as répondu quoi ?"],
+              ["Rachid", "Oui."],
+              [
+                "Yan",
+                "Parfait. Pour une fois, ne demande pas à Seb d’écrire la suite.",
+              ],
+              [
+                "Lauriane",
+                "Et la semaine prochaine, on se refait une séance ?",
+              ],
+              ["Rachid", "Avec plaisir."],
+              [
+                "Sébastien",
+                "Un café, une séance… Je peux vous installer un calendrier partagé.",
+              ],
+              ["Yan", "Ou tu peux les laisser se parler, pour changer."],
             ],
             mode: "rival",
           },
@@ -14086,6 +14600,12 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Et je n'ai toujours pas fini de te raconter comment j'ai eu la mienne.",
               ],
+              ["Chloé", "Il reste des muffins si vous avez fini."],
+              ["Hervé", "J’ai juste une petite histoire avant…"],
+              ["Lauriane", "La camionnette ?"],
+              ["Rachid", "1998 ?"],
+              ["Sirine", "Le garage ?"],
+              ["Hervé", "Vous pourriez varier vos interruptions."],
             ],
             mode: "director",
           },
@@ -14168,6 +14688,14 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Lionel",
                 "Alors commence par ça. Pas besoin de m'en parler pendant une heure.",
               ],
+              [
+                "Lionel",
+                "Par contre, ces deux chaises, je les prends pour la boxe.",
+              ],
+              ["Sirine", "Pas pendant les heures de travail, Lionel."],
+              ["Lionel", "Je prépare juste."],
+              ["Rachid", "Tu prépares un combat ou une réunion ?"],
+              ["Lionel", "Celui-là durera moins longtemps."],
             ],
             mode: "method",
           },
@@ -14231,6 +14759,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ],
               ["Rachid", "Je reconnais que je n'ai pas aidé."],
               ["Rizlene", "Non. Mais tu fais des progrès, je te le laisse."],
+              ["Sébastien", "Alors, vous êtes toujours amis ?"],
+              ["Rizlene", "Oui, Seb. Tu peux arrêter de mener l’enquête."],
+              [
+                "Yan",
+                "Viens, Rachid. On s’entraîne pendant qu’ils règlent ça.",
+              ],
+              ["Sébastien", "Attendez, je venais aussi."],
             ],
             mode: "romance",
           },
@@ -14261,6 +14796,12 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Très bien. C'est un mot qu'il faut apprendre à dire avant de devenir chef.",
               ],
+              ["Rachid", "Donc là, tu ne peux rien me reprocher."],
+              [
+                "Sirine",
+                "Je peux te reprocher d’avoir dit ça avant la fin de la réunion.",
+              ],
+              ["Hervé", "Il tend le bâton, aussi."],
             ],
             mode: "director",
           },
@@ -14309,6 +14850,19 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Richard",
                 "Oui. Et il faut le lui dire avant le départ, pas le lundi à huit heures.",
               ],
+              [
+                "Chloé",
+                "J’ai appris à faire la suite quand Amélie est absente.",
+              ],
+              [
+                "Richard",
+                "Très bien. Tu as aussi noté où trouver les informations ?",
+              ],
+              [
+                "Chloé",
+                "Oui. Et non, Rachid, ce n’est pas dans mon carnet de recettes.",
+              ],
+              ["Rachid", "Je n’avais encore rien demandé."],
             ],
             mode: "method",
           },
@@ -14339,6 +14893,14 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ],
               ["Sébastien", "J'avais mis une longue explication avant."],
               ["Christophe", "Je sais. C'est pour ça que je te le dis."],
+              ["Lauriane", "Je vais à la salle mardi. Tu viens ?"],
+              ["Rachid", "Mardi, je ne peux pas. Jeudi, oui."],
+              [
+                "Lauriane",
+                "D’accord pour jeudi. Je garde ma séance de mardi aussi.",
+              ],
+              ["Rachid", "Tu n’attends pas après moi, en fait."],
+              ["Lauriane", "Pour m’entraîner ? Sûrement pas."],
             ],
             mode: "tech",
           },
@@ -14375,6 +14937,19 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Lauriane",
                 "Tu peux juste me demander comment je vais. Ça marche assez bien.",
               ],
+              [
+                "Sébastien",
+                "Il a pris son café avec elle. Tu as remarqué, Yan ?",
+              ],
+              [
+                "Yan",
+                "Oui. Et j’aimerais qu’il réussisse à prendre aussi ses deux minutes de récupération sans nous raconter toute la pause.",
+              ],
+              ["Rachid", "C’est vous qui posez les questions !"],
+              ["Lauriane", "Tu as fini ton café ?"],
+              ["Rachid", "Oui."],
+              ["Lauriane", "Avant moi, ça arrive. Profites-en, c’est rare."],
+              ["Rachid", "Même le café, il faut que tu comptes ?"],
             ],
             mode: "rival",
           },
@@ -14384,11 +14959,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             title: "La vérification utile",
             act: "Apprendre à conduire",
             lines: [
-              ["Jean-Luc", "Là, c'est clair. Je n'ai rien à corriger."],
-              ["Rachid", "Vous êtes sûr ?"],
+              ["Jean-Luc", "J’ai vérifié. Il n’y a rien à corriger."],
+              ["Rachid", "Vous avez l’air déçu."],
+              ["Jean-Luc", "Pas du tout."],
+              ["Rachid", "Vous avez vérifié trois fois."],
               [
                 "Jean-Luc",
-                "Tu veux vraiment que je regarde une deuxième fois ?",
+                "Et tu veux vraiment que j’en fasse une quatrième ?",
               ],
             ],
             mode: "duel",
@@ -14459,6 +15036,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sébastien",
                 "Assez pour savoir que tu vas me faire une remarque.",
               ],
+              [
+                "Hervé",
+                "Vous m’entendez ? Je disais : en 1998, avec la camionnette…",
+              ],
+              [
+                "Sébastien",
+                "Oui, on vous entend. Le son fonctionne très bien.",
+              ],
+              ["Lauriane", "Trop bien."],
+              ["Hervé", "J’ai entendu, Lauriane."],
             ],
             mode: "tech",
           },
@@ -14525,6 +15112,10 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Lauriane",
                 "Merci. Et si tu me regardes, essaie au moins d'écrire quelque chose.",
               ],
+              ["Rachid", "Je peux présenter juste une minute avant toi ?"],
+              ["Lauriane", "Non. Je suis prête avant toi, je commence."],
+              ["Rachid", "On devait travailler ensemble."],
+              ["Lauriane", "Oui. Ensemble, mais moi d’abord."],
             ],
             mode: "rival",
           },
@@ -14546,6 +15137,20 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Athéna",
                 "Ne bouge pas, je te prépare ça avant que tu changes d'avis.",
               ],
+              [
+                "Athéna",
+                "Bon. Le visuel est prêt, le prix aussi. Vous pouvez arrêter de sourire et me donner une réponse ?",
+              ],
+              ["Sirine", "Oui, c’est sérieux. On peut partir là-dessus."],
+              [
+                "Athéna",
+                "Merci. Je préférais entendre ça plutôt qu’un quatrième compliment.",
+              ],
+              [
+                "Sébastien",
+                "Yan, elle vient de lui répondre avant même qu’il ouvre la bouche.",
+              ],
+              ["Yan", "Parce qu’on est tous faciles à lire, Seb."],
             ],
             mode: "budget",
           },
@@ -14576,6 +15181,19 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Lionel",
                 "C'est bien pour toi. Maintenant, montre-moi sur le mien.",
               ],
+              [
+                "Lionel",
+                "Le téléphone a survécu. Après le boulot, je vous attends avec les gants.",
+              ],
+              ["Sébastien", "Je peux mettre ma montre pour mesurer ?"],
+              [
+                "Yan",
+                "Tu peux aussi écouter Lionel au lieu de régler ta montre pendant vingt minutes.",
+              ],
+              [
+                "Rachid",
+                "Je prends les vidéos. S’il y a un volontaire, hein. Pas moi.",
+              ],
             ],
             mode: "tech",
           },
@@ -14588,6 +15206,10 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ["Sirine", "Dites aussi ce qui ne fonctionne pas encore."],
               ["Rachid", "J'avais peur que vous reteniez seulement ça."],
               ["Hervé", "On le retiendra surtout si on le découvre après."],
+              ["Rachid", "Cette fois, tu ne vas pas me faire redescendre."],
+              ["Sirine", "Je n’ai pas commencé. Tu veux vraiment savoir ?"],
+              ["Rachid", "Non. Enfin si. Bon, vas-y."],
+              ["Hervé", "C’est presque trop facile, Sirine."],
             ],
             mode: "director",
           },
@@ -14687,6 +15309,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Vous pouvez vous faire un compliment sans ajouter une petite pique ? Ah, non, elle vient de le faire.",
               ],
+              ["Chloé", "Ça fait plaisir de vous entendre vous remercier."],
+              ["Lauriane", "Ne t’habitue pas trop."],
+              [
+                "Chloé",
+                "D’accord. Il me reste quand même deux muffins pour vous.",
+              ],
+              [
+                "Rachid",
+                "Je retire tout ce que j’ai dit, on peut se remercier plus souvent.",
+              ],
             ],
             mode: "rival",
           },
@@ -14750,6 +15382,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ],
               ["Rachid", "Et s'ils changent ce qu'on a fait ?"],
               ["Sirine", "S'ils font mieux, vous les remercierez."],
+              [
+                "Hervé",
+                "Savoir se débrouiller, c’est important. Comme en 1998, quand j’ai poussé…",
+              ],
+              ["Sirine", "La camionnette. Ils ont compris, Hervé."],
+              ["Rachid", "On va finir par pouvoir la raconter sans vous."],
+              ["Hervé", "Vous oubliez toujours le passage où il pleuvait."],
             ],
             mode: "director",
           },
@@ -14816,6 +15455,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sébastien",
                 "Je suis content. J'ai quand même eu du mal à retirer le deuxième graphique.",
               ],
+              [
+                "Lauriane",
+                "Tu as vu ? Deux répétitions de plus que la dernière fois.",
+              ],
+              [
+                "Rachid",
+                "Oui. Je commence à regretter de t’avoir proposé de s’entraîner ensemble.",
+              ],
+              ["Lauriane", "C’est moi qui te l’ai proposé."],
+              ["Rachid", "Et en plus tu te souviens de tout."],
             ],
             mode: "tech",
           },
@@ -14867,6 +15516,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sébastien",
                 "À son téléphone aussi. Pour une fois, elle arrive au soir avec de la batterie.",
               ],
+              [
+                "Rachid",
+                "Seb, toi aussi tu passes ta vie à vérifier tes messages.",
+              ],
+              ["Sébastien", "C’est pour mes commandes."],
+              [
+                "Yan",
+                "Tes commandes, Lauriane, Rizlene… Vous pouvez poser vos téléphones cinq minutes ?",
+              ],
+              ["Rachid", "D’accord. Mais ne regarde pas le tien juste après."],
             ],
             mode: "romance",
           },
@@ -14921,6 +15580,24 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Donc on peut améliorer quelque chose sans ajouter de fonction.",
               ],
               ["Sirine", "Oui. Ça t'ennuie tant que ça ?"],
+              [
+                "Quentin K",
+                "Je vais encore vous raconter une soirée incroyable.",
+              ],
+              [
+                "Chloé",
+                "Non. Et je te l’ai déjà dit, je n’ai pas envie d’écouter ça.",
+              ],
+              ["Lauriane", "Tu changes de sujet, Quentin."],
+              [
+                "Sirine",
+                "Si elle doit te le répéter encore, tu viendras m’expliquer pourquoi.",
+              ],
+              ["Quentin K", "D’accord. On parle du travail."],
+              ["Rachid", "On a fini. Tout le monde est content."],
+              ["Sirine", "Je ne me souviens pas d’avoir dit ça."],
+              ["Rachid", "Presque tout le monde."],
+              ["Sirine", "Là, c’est déjà plus juste."],
             ],
             mode: "director",
           },
@@ -15083,6 +15760,10 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Laisse-moi au moins commencer avant de regarder l'heure.",
               ],
+              ["Hervé", "Avant de parler de votre projet : en 1998…"],
+              ["Rachid", "Non, cette fois c’est notre histoire."],
+              ["Lauriane", "Vous pouvez garder la camionnette pour après."],
+              ["Hervé", "Bon. Mais je n’ai pas dit que j’y renonçais."],
             ],
             mode: "director",
           },
@@ -15152,6 +15833,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sébastien",
                 "Oui, Lionel. J'ai essayé avec ton téléphone avant de venir.",
               ],
+              [
+                "Lionel",
+                "J’ai mis l’heure de la boxe à côté de votre QR code.",
+              ],
+              ["Sirine", "Tu peux mettre ça ailleurs ?"],
+              ["Lionel", "Oui. Tu viens regarder ?"],
+              ["Sirine", "Je viens surtout récupérer mes chaises."],
             ],
             mode: "tech",
           },
@@ -15185,6 +15873,19 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rizlene",
                 "Non, mais j'ai vu ta tête quand j'ai parlé de café.",
               ],
+              [
+                "Sébastien",
+                "Yan, il veut savoir si Lauriane vient, je le vois déjà.",
+              ],
+              [
+                "Rachid",
+                "C’est vous qui allez finir par avoir un problème avec elle.",
+              ],
+              [
+                "Yan",
+                "On vient juste prendre un café, Rachid. Enfin, moi, oui.",
+              ],
+              ["Sébastien", "Pareil. Mais je garde les yeux ouverts."],
             ],
             mode: "romance",
           },
@@ -15254,6 +15955,31 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Gardez-moi une copie. Je vais essayer de ne pas répondre avec une anecdote.",
               ],
+              [
+                "Sirine",
+                "Athéna, tu peux organiser la communication pour la suite du projet. Tu nous proposes ce qu’il faut.",
+              ],
+              ["Athéna", "Avec un budget ?"],
+              [
+                "Hervé",
+                "Avec un vrai montant à discuter. Pas seulement des encouragements.",
+              ],
+              [
+                "Athéna",
+                "Bien. Maintenant que j’ai votre attention, je vais en profiter.",
+              ],
+              [
+                "Rachid",
+                "Tu as entendu ? Ça fait deux fois qu’elle me laisse continuer.",
+              ],
+              [
+                "Sirine",
+                "Je t’entends aussi. Ne transforme pas ça en discours de victoire.",
+              ],
+              [
+                "Hervé",
+                "Tu pourrais essayer d’être fier en silence. Ça lui donne moins d’idées.",
+              ],
             ],
             mode: "director",
           },
@@ -15272,6 +15998,17 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Amélie · RH",
                 "Je vais le faire. Avant qu'ils recommencent à appeler la première Amélie qu'ils trouvent.",
               ],
+              ["Sébastien", "Alors, votre séance tous les deux ?"],
+              [
+                "Lauriane",
+                "Très bien. On a fait nos exercices, puis on est rentrés.",
+              ],
+              ["Sébastien", "C’est tout ?"],
+              [
+                "Yan",
+                "Tu veux quoi de plus ? Ils sont allés à la salle, pas dans ton feuilleton.",
+              ],
+              ["Rachid", "Pour une fois, merci Yan."],
             ],
             mode: "team",
           },
@@ -15404,6 +16141,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Florian",
                 "Je savais que tu allais demander avant même d'avoir fini ma phrase.",
               ],
+              ["Chloé", "J’ai apporté des muffins au chocolat."],
+              ["Florian", "Rachid, tu en as déjà pris deux."],
+              ["Rachid", "Tu tiens vraiment les comptes de tout ?"],
+              [
+                "Chloé",
+                "Là, je préfère qu’il continue. Il en faut pour les autres.",
+              ],
             ],
             mode: "budget",
           },
@@ -15461,6 +16205,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               ["Lauriane", "On prend un café après ?"],
               ["Rachid", "Juste toi et moi ?"],
               ["Lauriane", "Oui. Tu vas me le redemander chaque fois ?"],
+              [
+                "Rachid",
+                "Les gars, elle m’a encore proposé de sortir prendre un café.",
+              ],
+              ["Sébastien", "Cette fois, tu sais quoi répondre ?"],
+              [
+                "Yan",
+                "Il a dit oui. On n’a pas besoin de faire une réunion à trois.",
+              ],
+              ["Rachid", "Merci. Et vous ne venez pas “par hasard”."],
             ],
             mode: "rival",
           },
@@ -15536,6 +16290,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Jean-Luc",
                 "Avec un exemple. Ne retiens pas seulement la moitié qui t'arrange.",
               ],
+              ["Rachid", "Vous avez fini par accepter que j’aie raison."],
+              [
+                "Jean-Luc",
+                "Une fois. Tu vas vraiment me le rappeler toute la semaine ?",
+              ],
+              ["Rachid", "Je pensais commencer par la journée."],
+              [
+                "Jean-Luc",
+                "Voilà pourquoi je regrette déjà de te l’avoir dit.",
+              ],
             ],
             mode: "duel",
           },
@@ -15575,6 +16339,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rachid",
                 "On vous la fera. Pas besoin de raconter une histoire pour chaque prénom.",
               ],
+              [
+                "Hervé",
+                "Ma liste de remerciements est presque aussi longue que l’histoire de ma camionnette.",
+              ],
+              ["Sirine", "Justement, ne commence pas."],
+              ["Hervé", "Je n’allais pas la raconter."],
+              ["Rachid", "Vous avez déjà dit “en 1998” en entrant."],
             ],
             mode: "team",
           },
@@ -15629,6 +16400,18 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Athéna",
                 "Pas beaucoup. Je vais te répondre avant que tu regrettes la question.",
               ],
+              [
+                "Athéna",
+                "J’ai préparé deux versions. Vous les regardez et vous me dites ce qui se lit le mieux.",
+              ],
+              ["Rachid", "Celle de gauche."],
+              ["Athéna", "Tu as vraiment lu ?"],
+              [
+                "Yan",
+                "Laisse-lui deux minutes. Il apprend à te regarder ailleurs que dans les yeux.",
+              ],
+              ["Sébastien", "Nous aussi, on va regarder le document."],
+              ["Athéna", "Ça serait un bon début."],
             ],
             mode: "budget",
           },
@@ -15707,6 +16490,19 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rachid",
                 "À côté de... Vous pourriez arrêter de me regarder comme ça ?",
               ],
+              [
+                "Chloé",
+                "J’ai amené les muffins. Vous choisissez vos places, moi je m’assieds où il reste une chaise.",
+              ],
+              [
+                "Lauriane",
+                "Tu es la seule à ne pas transformer cette pause en compétition.",
+              ],
+              [
+                "Chloé",
+                "Si on commence à compter qui a pris quoi, je n’en ramène plus.",
+              ],
+              ["Rachid", "Personne ne compte ! Florian, arrête tout de suite."],
             ],
             mode: "romance",
           },
@@ -15754,6 +16550,12 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               [
                 "Hervé",
                 "Je n'ai encore rien commencé. Vous me connaissez trop bien.",
+              ],
+              ["Hervé", "J’ai juste un exemple personnel avant…"],
+              ["Toute l’équipe", "La camionnette !"],
+              [
+                "Hervé",
+                "Bon. Vous faites les malins, mais aucun de vous n’était là pour pousser.",
               ],
             ],
             mode: "director",
@@ -15811,6 +16613,15 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               [
                 "Lauriane",
                 "Bien. Parce que moi, je n'avais pas prévu de te la laisser aussi facilement.",
+              ],
+              ["Lauriane", "D’ailleurs, j’ai fini mon dossier avant toi."],
+              [
+                "Rachid",
+                "Je te parle de ce que j’ai appris, tu me parles d’arriver première.",
+              ],
+              [
+                "Lauriane",
+                "Je peux faire les deux. C’est pour ça que tu as du mal à suivre.",
               ],
             ],
             mode: "rival",
@@ -15896,6 +16707,28 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Jean-Luc",
                 "J'apprécie. Tu pourrais le dire un tout petit peu plus fort.",
               ],
+              [
+                "Quentin K",
+                "Vous voulez plutôt entendre ma dernière histoire ?",
+              ],
+              ["Rachid", "Si tu recommences à parler des femmes, non."],
+              ["Jean-Luc", "On est en train de finir quelque chose, Quentin."],
+              [
+                "Rachid",
+                "Voilà. Pour une fois, Jean-Luc et moi on est d’accord.",
+              ],
+              ["Quentin K", "Bon, je repasserai."],
+              [
+                "Lauriane",
+                "Ça m’a fait du bien, cette séance. J’avais besoin de me vider la tête.",
+              ],
+              [
+                "Rachid",
+                "Pareil. On remet ça la semaine prochaine si on trouve un soir ?",
+              ],
+              ["Lauriane", "Oui. Et cette fois, je choisis la musique."],
+              ["Rachid", "Tu veux vraiment tout gagner."],
+              ["Lauriane", "Surtout éviter ta playlist."],
             ],
             mode: "duel",
           },
@@ -15950,6 +16783,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Amélie · RH",
                 "Non. Tu es peut-être simplement moins doué que lui pour ça.",
               ],
+              [
+                "Chloé",
+                "Je peux montrer l’accueil au nouveau. J’ai préparé ce qu’il faut.",
+              ],
+              [
+                "Lauriane",
+                "Merci. Tu n’es vraiment pas obligée de ramener des gâteaux en plus.",
+              ],
+              ["Chloé", "Je sais. Mais j’aime bien cuisiner."],
+              ["Rachid", "Et nous, on respecte énormément cette passion."],
             ],
             mode: "method",
           },
@@ -16076,6 +16919,14 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rizlene",
                 "Tu sais que tu peux juste ne pas avoir d'avis, parfois ?",
               ],
+              [
+                "Rizlene",
+                "Vous êtes toujours tous les trois à parler de ce que fait Rachid ?",
+              ],
+              ["Sébastien", "Pas toujours."],
+              ["Yan", "Seb, sois honnête."],
+              ["Rachid", "Toujours. Et ils prétendent que c’est pour m’aider."],
+              ["Sébastien", "Ça a quand même fini par marcher."],
             ],
             mode: "romance",
           },
@@ -16127,6 +16978,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sébastien",
                 "Oui. J'ai cherché une appli, mais visiblement il faut quand même ouvrir la bouche.",
               ],
+              [
+                "Yan",
+                "Pour une fois, je suis d’accord avec Seb. Tu vas la voir et tu lui parles.",
+              ],
+              [
+                "Rachid",
+                "Je vous avais demandé un conseil, pas un accompagnement jusqu’à son bureau.",
+              ],
+              ["Sébastien", "On peut s’arrêter dans le couloir."],
+              ["Rachid", "Vous restez ici."],
             ],
             mode: "tech",
           },
@@ -16163,6 +17024,18 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rizlene",
                 "Je sais. Je voulais juste l'entendre sortir de ma propre bouche.",
               ],
+              [
+                "Chloé",
+                "Viens avec nous, Rizlene. J’ai mis de côté les muffins que tu aimes.",
+              ],
+              [
+                "Rizlene",
+                "Merci. Je préfère ça à attendre devant le bureau de Rachid.",
+              ],
+              [
+                "Lauriane",
+                "Bonne décision. Et lui, on va le laisser se débrouiller deux minutes.",
+              ],
             ],
             mode: "romance",
           },
@@ -16181,6 +17054,14 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Lionel",
                 "Oui. Et j'ai répondu à ses questions. Il n'y a pas de miracle.",
               ],
+              ["Lionel", "Et pour la boxe de vendredi, qui vient ?"],
+              ["Sébastien", "Je viens regarder."],
+              ["Rachid", "Moi aussi."],
+              [
+                "Yan",
+                "Moi, je viens m’entraîner. Vous me raconterez leurs excuses après.",
+              ],
+              ["Lionel", "Enfin quelqu’un qui répond normalement."],
             ],
             mode: "method",
           },
@@ -16217,6 +17098,29 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Athéna",
                 "Laisse-moi au moins être contente avant de me poser la question.",
               ],
+              [
+                "Athéna",
+                "Je peux enfin faire ce qu’on me demande avec les moyens qui vont avec.",
+              ],
+              ["Sirine", "Tu as bien défendu ce dont tu avais besoin."],
+              [
+                "Athéna",
+                "Merci. Je suis quand même contente qu’on ait fini par parler de mon travail.",
+              ],
+              ["Rachid", "Oui. Là-dessus, on peut mieux faire."],
+              ["Sébastien", "Yan et moi, on confirme."],
+              [
+                "Sébastien",
+                "En attendant, tu crois qu’Athéna vient prendre un café ?",
+              ],
+              [
+                "Yan",
+                "Seb, elle vient de nous expliquer son travail pendant vingt minutes.",
+              ],
+              ["Rachid", "Et on a quand même retenu ce qu’elle a dit."],
+              ["Athéna", "Très bien. Alors donnez-moi les trois décisions."],
+              ["Sébastien", "… Yan, aide-nous."],
+              ["Yan", "Je vous avais dit d’écouter."],
             ],
             mode: "budget",
           },
@@ -16265,6 +17169,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Hervé",
                 "Prends-le avant qu'elle change d'avis. Moi, je vous dis merci aussi.",
               ],
+              ["Chloé", "Il y a des muffins pour fêter ça."],
+              [
+                "Hervé",
+                "Ça me rappelle ce qu’on avait mangé après la panne de 1998.",
+              ],
+              ["Sirine", "Hervé. Un muffin, pas une heure d’histoire."],
+              ["Hervé", "Vous êtes devenus très difficiles à réunir."],
             ],
             mode: "director",
           },
@@ -16334,6 +17245,21 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rachid",
                 "Certaines. S'ils commencent à vouloir la place d'Hervé, je ne garantis rien.",
               ],
+              [
+                "Yan",
+                "Vous vous entraînez encore ensemble de temps en temps ?",
+              ],
+              [
+                "Lauriane",
+                "Quand nos horaires collent. Le reste du temps, chacun fait ses séances.",
+              ],
+              ["Rachid", "Et elle continue de compter mes répétitions."],
+              ["Lauriane", "Parce que tu continues d’en oublier."],
+              [
+                "Sébastien",
+                "C’est beau, quelqu’un qui suit autant tes progrès.",
+              ],
+              ["Rachid", "Seb. N’en rajoute pas."],
             ],
             mode: "team",
           },
@@ -16352,6 +17278,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sébastien",
                 "Mais sans moi, tu serais encore en train de demander à Richard si elle est en pause.",
               ],
+              [
+                "Yan",
+                "On t’a aidé tous les deux. Même quand tu nous demandais de nous taire.",
+              ],
+              ["Rachid", "Surtout quand je vous demandais de vous taire."],
+              ["Sébastien", "N’empêche que tu nous racontais tout après."],
+              ["Rachid", "Oui. Bon. C’est vrai."],
             ],
             mode: "tech",
           },
@@ -16403,6 +17336,15 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Sirine",
                 "Bien. Il te reste à remplir les conditions, et on en reparle.",
               ],
+              ["Rachid", "Je vais finir par te convaincre, Sirine."],
+              [
+                "Sirine",
+                "Peut-être. Mais profite pas trop du moment où tu le crois.",
+              ],
+              [
+                "Hervé",
+                "Là, tu ne peux pas dire qu’elle ne t’avait pas prévenu.",
+              ],
             ],
             mode: "director",
           },
@@ -16421,6 +17363,15 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 "Rachid",
                 "J'en ai toujours envie. Mais je suis surtout content d'avoir fait tout ça avec eux.",
               ],
+              [
+                "Hervé",
+                "Il faudrait que je vous raconte comment j’ai poussé une camionnette en 1998.",
+              ],
+              ["Rachid", "On la connaît. Mais allez-y."],
+              ["Lauriane", "J’ai encore un peu de temps."],
+              ["Chloé", "Je vais chercher les muffins."],
+              ["Sébastien", "Yan, tu crois qu’il va enfin changer un détail ?"],
+              ["Yan", "Non. Mais on peut rester quand même."],
             ],
             mode: "team",
           },
@@ -17029,6 +17980,79 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           getState: () => JSON.parse(JSON.stringify(state)),
         };
         render();
+      })();</script
+    ><script id="ensio-quest-feedback">
+      (() => {
+        const el = document.createElement("div");
+        el.id = "ensioQuestReward";
+        el.hidden = true;
+        el.setAttribute("role", "status");
+        el.setAttribute("aria-live", "polite");
+        document.body.append(el);
+        let timer;
+        window.ensioQuestReward = (q, rect) => {
+          if (q.xp <= 0) return;
+          el.textContent = "✓ Quête accomplie · +" + q.xp + " XP";
+          el.hidden = false;
+          el.style.animation = "none";
+          void el.offsetWidth;
+          el.style.animation = "";
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            el.hidden = true;
+          }, 1800);
+          const button = document.querySelector(
+            '#questModulesSeparate [data-id="' + q.id + '"]',
+          );
+          const row = button?.parentElement;
+          if (row) {
+            row.classList.remove("ensio-quest-pulse");
+            void row.offsetWidth;
+            row.classList.add("ensio-quest-pulse");
+          }
+          if (rect && !matchMedia("(prefers-reduced-motion:reduce)").matches)
+            for (let i = 0; i < 8; i++) {
+              const spark = document.createElement("i");
+              spark.className = "ensio-quest-spark";
+              spark.style.left =
+                Math.min(
+                  innerWidth - 10,
+                  Math.max(10, rect.left + rect.width / 2),
+                ) + "px";
+              spark.style.top = rect.top + rect.height / 2 + "px";
+              spark.style.setProperty(
+                "--dx",
+                Math.cos((i * Math.PI) / 4) * 48 + "px",
+              );
+              spark.style.setProperty(
+                "--dy",
+                Math.sin((i * Math.PI) / 4) * 42 - 15 + "px",
+              );
+              spark.style.background = ["#0bbbef", "#7cc3a2", "#e72e8a"][i % 3];
+              document.body.append(spark);
+              setTimeout(() => spark.remove(), 700);
+            }
+        };
+      })();</script
+    ><script id="ensio-career-layout">
+      (() => {
+        const campaign = document.getElementById("ensioCampaign");
+        const slot = document.createElement("div");
+        slot.id = "ensioProfileTop";
+        campaign.before(slot);
+        function profileFirst() {
+          const profile = document.querySelector(
+            "#rpgRoot [data-hunter-profile]",
+          );
+          if (!profile) return;
+          const wrapper = profile.parentElement.matches("details")
+            ? profile.parentElement
+            : profile;
+          if (wrapper.matches("details")) wrapper.open = true;
+          slot.replaceChildren(wrapper);
+        }
+        document.addEventListener("ensio-rachid:panels", profileFirst);
+        profileFirst();
       })();
     </script></body
   ></html
