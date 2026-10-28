@@ -4500,6 +4500,38 @@
         function validate(key, v) {
           safeTree(v);
           if (
+            key === "ensio-rachid-inbox-v1" &&
+            (!object(v) ||
+              v.version !== 1 ||
+              !Array.isArray(v.items) ||
+              v.items.length > 1000 ||
+              !v.items.every(
+                (x) =>
+                  object(x) &&
+                  typeof x.id === "string" &&
+                  x.id.length <= 150 &&
+                  typeof x.title === "string" &&
+                  typeof x.body === "string" &&
+                  typeof x.read === "boolean" &&
+                  typeof x.at === "string" &&
+                  Number.isFinite(Date.parse(x.at)) &&
+                  ["rpg", "training", "dungeons"].includes(x.route) &&
+                  [
+                    "career",
+                    "meeting",
+                    "campaign",
+                    "quest",
+                    "dungeon",
+                    "committee",
+                    "training",
+                  ].includes(x.kind) &&
+                  typeof x.target === "string" &&
+                  /^[a-zA-Z0-9_-]*$/.test(x.target),
+              ) ||
+              new Set(v.items.map((x) => x.id)).size !== v.items.length)
+          )
+            fail("Messagerie invalide");
+          if (
             key === "ensio-rachid-campaign-v1" &&
             (!object(v) ||
               v.version !== 1 ||
@@ -6718,6 +6750,106 @@
       #ensioEncounter:focus {
         outline: 2px solid #0bbbef;
         outline-offset: 5px;
+      }</style
+    ><style id="ensio-inbox-style">
+      .ensio-inbox-button {
+        min-width: 48px;
+        min-height: 44px;
+        border: 1px solid #0bbbef;
+        border-radius: 12px;
+        background: #133c57;
+        color: #e0faff;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      #ensioInbox[hidden],
+      #ensioInboxNotice[hidden] {
+        display: none;
+      }
+      #ensioInbox {
+        position: fixed;
+        inset: 0;
+        z-index: 16000;
+        background: #020a16ce;
+        display: grid;
+        place-items: center;
+        padding: max(16px, env(safe-area-inset-top)) 14px
+          max(16px, env(safe-area-inset-bottom));
+      }
+      .ensio-inbox-dialog {
+        width: min(620px, 100%);
+        max-height: 88dvh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: #0c2438;
+        color: #e4f4ff;
+        border: 1px solid #0bbbef;
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 20px 70px #0008;
+      }
+      .ensio-inbox-dialog header {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: start;
+      }
+      .ensio-inbox-dialog h2 {
+        margin: 6px 0;
+      }
+      .ensio-inbox-dialog p {
+        line-height: 1.5;
+      }
+      .ensio-inbox-dialog small {
+        color: #7cc3a2;
+        font-size: 10px;
+        letter-spacing: 1px;
+      }
+      .ensio-inbox-dialog button {
+        min-height: 44px;
+        padding: 8px 12px;
+        border: 1px solid #4386ad;
+        border-radius: 9px;
+        background: #174463;
+        color: white;
+        font: inherit;
+        cursor: pointer;
+      }
+      .inbox-item {
+        margin-top: 14px;
+        padding: 14px;
+        border: 1px solid #2c506b;
+        border-radius: 12px;
+        background: #102d44;
+      }
+      .inbox-item.unread {
+        border-left: 4px solid #0bbbef;
+        background: #143c55;
+      }
+      .inbox-item h3 {
+        margin: 8px 0;
+        font-size: 16px;
+      }
+      #ensioInboxNotice {
+        position: fixed;
+        z-index: 8000;
+        bottom: 160px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100vw - 28px);
+        background: #123c51;
+        color: #e9fff8;
+        border: 1px solid #7cc3a2;
+        padding: 12px 16px;
+        border-radius: 12px;
+        pointer-events: none;
+      }
+      @media (max-width: 850px) {
+        .ensio-inbox-button {
+          order: 2;
+        }
       }
     </style></head
   ><body
@@ -8366,10 +8498,9 @@
             xp: q.xp,
           });
           const rewardRect = b.getBoundingClientRect();
-          if (t === today()) animateXP(b, q.xp);
+          animateXP(b, q.xp);
           save();
-          if (t === today()) window.ensioQuestReward?.(q, rewardRect);
-          if (t !== today()) return;
+          window.ensioQuestReward?.(q, rewardRect);
           const afterG = level(xpOf(), "global")[0],
             afterM = level(xpOf(q.module), "module")[0],
             afterTitle = title(q.module, afterM),
@@ -11908,6 +12039,20 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           "Candidat à la présidence",
         ];
         const thresholds = [0, 6, 16, 26, 41, 61];
+        window.ensioUnlockCatalog = () => [
+          ...people.map((p) => ({
+            id: "person-" + p.id,
+            name: p.name,
+            level: p.level,
+            description: p.job,
+          })),
+          ...chapters.map((c) => ({
+            id: c.id,
+            name: c.title || c.name || c.id,
+            level: c.level,
+            description: "Nouvelle étape de carrière et dialogue.",
+          })),
+        ];
         const levelNow = () => level(xpOf(), "global")[0];
         const won = (id) =>
           !!window.rpgLifeAdventure?.getState().bosses?.[id]?.won;
@@ -18053,6 +18198,329 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         }
         document.addEventListener("ensio-rachid:panels", profileFirst);
         profileFirst();
+      })();</script
+    ><script id="ensio-inbox-script">
+      (() => {
+        "use strict";
+        const KEY_INBOX = "ensio-rachid-inbox-v1";
+        let state = { version: 1, items: [] },
+          protectedState = false,
+          lastFocus,
+          announcementTimer,
+          scanTimer;
+        try {
+          const raw = appStorage.getItem(KEY_INBOX);
+          protectedState =
+            raw === null && localStorage.getItem(KEY_INBOX) !== null;
+          if (raw) state = JSON.parse(raw);
+        } catch {
+          protectedState = true;
+        }
+        const safe = (v) =>
+          String(v).replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[c],
+          );
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "ensio-inbox-button";
+        document.querySelector(".topbar").append(button);
+        const layer = document.createElement("div");
+        layer.id = "ensioInbox";
+        layer.hidden = true;
+        layer.innerHTML =
+          '<div class="ensio-inbox-dialog" role="dialog" aria-modal="true" aria-labelledby="inboxTitle" tabindex="-1"><header><div><small>ENSIO · LE FIL DE TON AVENTURE</small><h2 id="inboxTitle">Mes nouveautés</h2></div><button type="button" data-inbox-close aria-label="Fermer la messagerie">✕</button></header><p>Les conversations, missions et étapes débloquées restent ici pour que tu puisses les retrouver.</p><button type="button" data-inbox-read-all>Tout marquer comme lu</button><div id="ensioInboxList"></div><p id="ensioInboxError" role="status"></p></div>';
+        document.body.append(layer);
+        const notice = document.createElement("div");
+        notice.id = "ensioInboxNotice";
+        notice.hidden = true;
+        notice.setAttribute("role", "status");
+        document.body.append(notice);
+        function persist(next) {
+          if (protectedState) return false;
+          try {
+            appStorage.commit({ [KEY_INBOX]: JSON.stringify(next) });
+            state = next;
+            return true;
+          } catch {
+            document.getElementById("ensioInboxError").textContent =
+              "Impossible d’enregistrer la messagerie. Tes nouveautés restent non lues.";
+            return false;
+          }
+        }
+        function catalog() {
+          const items = [],
+            add = (id, title, body, route, kind, target = "") =>
+              items.push({ id, title, body, route, kind, target });
+          const l = level(xpOf(), "global")[0];
+          for (const r of ranksForAvatar())
+            if (r.level > 0 && l >= r.level)
+              add(
+                "career:" + r.level,
+                "Nouvelle étape de carrière",
+                r.name + " · niveau " + r.level,
+                "rpg",
+                "career",
+              );
+          if (window.ensioCareer?.isPresident())
+            add(
+              "president",
+              "Objectif atteint : PDG",
+              "La présidence est à toi. Va découvrir ton nouveau statut.",
+              "rpg",
+              "career",
+            );
+          for (const c of window.ensioUnlockCatalog?.() || [])
+            if (l >= c.level)
+              add(
+                "meeting:" + c.id,
+                "Rencontre disponible",
+                c.name +
+                  " · " +
+                  (c.description || "Une conversation t’attend."),
+                "rpg",
+                "meeting",
+                c.id,
+              );
+          const campaign = window.ensioCampaign;
+          if (campaign) {
+            const n = campaign.completed(),
+              ep = campaign.episodes[n];
+            if (ep && campaign.canRead(n))
+              add(
+                "episode:" + n,
+                n === 0
+                  ? "Ton histoire commence"
+                  : "La suite de l’histoire est disponible",
+                "Niveau " + n + " · " + ep.title,
+                "rpg",
+                "campaign",
+              );
+          }
+          for (const q of SURPRISES)
+            if (surpriseUnlocked(q))
+              add(
+                "quest:" + q.id,
+                "Nouvelle mission disponible",
+                q.name,
+                "dungeons",
+                "quest",
+                q.id,
+              );
+          for (const q of DUNGEONS)
+            if (l >= q.lv) {
+              add(
+                "dungeon:" + q.id,
+                "Défi de service débloqué",
+                q.name + " · niveau " + q.lv,
+                "dungeons",
+                "dungeon",
+                q.id,
+              );
+              if (!dungeonClaims[q.id] && dungeonDetails(q).ready)
+                add(
+                  "ready:" + q.id,
+                  "Défi prêt à terminer",
+                  q.name + " : tu peux maintenant le valider.",
+                  "dungeons",
+                  "dungeon",
+                  q.id,
+                );
+            }
+          for (const b of ["gate", "will", "four", "night", "master"])
+            if (dungeonClaims[b])
+              add(
+                "committee:" + b,
+                "Soutenance accessible",
+                "Ton défi terminé t’ouvre une nouvelle soutenance.",
+                "rpg",
+                "committee",
+              );
+          const sl = sportLevel();
+          if (sl.lv > 1)
+            add(
+              "sport:" + sl.lv,
+              "Nouveau niveau sportif",
+              "Niveau " + sl.lv + " · " + sl.rank,
+              "training",
+              "training",
+            );
+          return items;
+        }
+        function render() {
+          const unread = state.items.filter((x) => !x.read).length;
+          button.textContent = "✉ " + (unread ? Math.min(99, unread) : "");
+          button.setAttribute(
+            "aria-label",
+            "Nouveautés : " + unread + " non lue" + (unread > 1 ? "s" : ""),
+          );
+          button.setAttribute("aria-haspopup", "dialog");
+          document.getElementById("ensioInboxList").innerHTML =
+            [...state.items]
+              .reverse()
+              .map(
+                (x) =>
+                  '<article class="inbox-item ' +
+                  (x.read ? "" : "unread") +
+                  '"><small>' +
+                  (x.read ? "LU" : "NOUVEAU") +
+                  " · " +
+                  safe(new Date(x.at).toLocaleDateString("fr-FR")) +
+                  "</small><h3>" +
+                  safe(x.title) +
+                  "</h3><p>" +
+                  safe(x.body) +
+                  '</p><button type="button" data-inbox-open="' +
+                  safe(x.id) +
+                  '">Voir →</button></article>',
+              )
+              .join("") ||
+            "<p>Aucune nouveauté pour le moment. Tes prochains déblocages apparaîtront ici.</p>";
+          if (protectedState)
+            document.getElementById("ensioInboxError").textContent =
+              "La messagerie enregistrée est illisible. Les données originales sont conservées ; exporte une sauvegarde avant réparation.";
+        }
+        function scan(announce = true) {
+          if (protectedState) return;
+          const known = new Set(state.items.map((x) => x.id));
+          const added = catalog()
+            .filter((x) => !known.has(x.id))
+            .map((x) => ({ ...x, read: false, at: new Date().toISOString() }));
+          if (
+            added.length &&
+            persist({ ...state, items: [...state.items, ...added] })
+          ) {
+            if (announce) {
+              notice.textContent =
+                "✉ " +
+                added.length +
+                " nouveauté" +
+                (added.length > 1 ? "s" : "") +
+                " à découvrir dans ta messagerie";
+              notice.hidden = false;
+              clearTimeout(announcementTimer);
+              announcementTimer = setTimeout(
+                () => (notice.hidden = true),
+                4000,
+              );
+            }
+          }
+          render();
+        }
+        function open() {
+          lastFocus = document.activeElement;
+          notice.hidden = true;
+          render();
+          layer.hidden = false;
+          layer.querySelector("[data-inbox-close]").focus();
+        }
+        function close() {
+          layer.hidden = true;
+          lastFocus?.focus({ preventScroll: true });
+        }
+        button.addEventListener("click", open);
+        layer.addEventListener("click", (e) => {
+          if (e.target === layer || e.target.closest("[data-inbox-close]"))
+            return close();
+          if (e.target.closest("[data-inbox-read-all]")) {
+            persist({
+              ...state,
+              items: state.items.map((x) => ({ ...x, read: true })),
+            });
+            render();
+            return;
+          }
+          const action = e.target.closest("[data-inbox-open]");
+          if (!action) return;
+          const item = state.items.find(
+            (x) => x.id === action.dataset.inboxOpen,
+          );
+          if (!item) return;
+          if (
+            !catalog().some((x) => x.id === item.id) &&
+            !["career", "campaign", "committee", "training"].includes(item.kind)
+          ) {
+            document.getElementById("ensioInboxError").textContent =
+              "Ce contenu n’est plus accessible avec ta progression actuelle.";
+            return;
+          }
+          persist({
+            ...state,
+            items: state.items.map((x) =>
+              x.id === item.id ? { ...x, read: true } : x,
+            ),
+          });
+          close();
+          window.rpgLifeNavigation.go(item.route);
+          if (item.kind === "meeting") {
+            document.getElementById("ensioPeople").open = true;
+            document
+              .querySelector('[data-ensio-open="' + item.target + '"]')
+              ?.click();
+          } else if (item.kind === "campaign")
+            document
+              .querySelector("#ensioCampaignHome [data-campaign-open]")
+              ?.click();
+          else if (item.kind === "training") {
+            sportPage = "progress";
+            sportRender();
+          } else if (item.kind === "committee") {
+            document
+              .querySelectorAll("#rpgBosses details")
+              .forEach((d) => (d.open = true));
+            document
+              .getElementById("rpgBosses")
+              .scrollIntoView({ block: "start" });
+          }
+          render();
+        });
+        layer.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            close();
+          }
+          if (e.key === "Tab") {
+            const nodes = [
+                ...layer.querySelectorAll("button:not(:disabled)"),
+              ].filter((x) => x.offsetParent !== null),
+              first = nodes[0],
+              last = nodes.at(-1);
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        });
+        const schedule = () => {
+          clearTimeout(scanTimer);
+          scanTimer = setTimeout(() => scan(), 50);
+        };
+        document.addEventListener("ensio-rachid:changed", schedule);
+        document.addEventListener("click", (e) => {
+          if (e.target.closest("button")) schedule();
+        });
+        const previous = sportRender;
+        sportRender = function (...args) {
+          const result = previous(...args);
+          schedule();
+          return result;
+        };
+        window.ensioInbox = {
+          scan,
+          open,
+          getState: () => JSON.parse(JSON.stringify(state)),
+        };
+        scan(false);
       })();
     </script></body
   ></html
