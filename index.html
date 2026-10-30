@@ -11440,7 +11440,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           ["quests", "Quêtes", "Quêtes", "quests"],
           ["rpg", "Carrière", "Carrière", "hero"],
           ["colleagues", "Collègues", "Collègues", "hero"],
-          ["training", "Entraînement", "Entraînement", "training"],
+          ["training", "Entraînement", "Séances", "training"],
           ["analytics", "Progression", "Progrès", "progress"],
           ["settings", "Paramètres", "Réglages", "settings"],
         ]) {
@@ -19223,7 +19223,7 @@ button:focus-visible {outline:3px solid #a5b4fc;outline-offset:3px}
 #colleagues .page-heading {margin-bottom:20px}
 .inbox-item button {min-height:44px;margin:4px}
 #ensioRewards {display:grid;gap:20px}
-@media(max-width:850px){body:not(.shinobi-mode) .sidebar .tabs {display:flex!important;overflow-x:auto;justify-content:space-around;gap:2px}body:not(.shinobi-mode) .sidebar .tabs>.tab:not(.legacy-route) {flex:1 0 65px!important;min-width:65px!important;padding:8px 3px!important}.mobile-tab-label {font-size:10px!important}.sidebar .tabs>.legacy-route {display:none!important}}
+
 </style><script id="ensio-ergonomie-v2" type="text/plain" data-ensio-deferred>
 (()=>{
 
@@ -19468,6 +19468,41 @@ try{
  window.addEventListener('storage',e=>{if(e.key===cacheKey(uid)&&ready){ready=false;cache=null;dirty=false;clearTimeout(timer);unsubscribe?.();gate('La sauvegarde a changé dans un autre onglet. Recharge cette page pour continuer.');buttons([['Recharger',async()=>location.reload()]])}});
 }catch(e){gate('Impossible de charger la connexion Firebase. Ouvre le jeu avec son adresse HTTPS et vérifie ta connexion Internet.');buttons([['Réessayer',async()=>location.reload()]])}
 })();
-</script></body
+</script><style id="ensio-mobile-nav-fixed">
+@media(max-width:850px){
+ body:not(.shinobi-mode){--mobile-nav-space:82px}
+ body:not(.shinobi-mode) .app>.sidebar{
+  position:fixed!important;inset:auto 0 0!important;width:100%!important;max-width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;transform:none!important;display:block!important;box-sizing:border-box!important;
+  padding:5px max(4px,env(safe-area-inset-right,0px)) max(5px,env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))!important;
+  z-index:120!important;background:#161923!important;border-top:1px solid #343b51!important;
+ }
+ body:not(.shinobi-mode) .app>.sidebar .brand,
+ body:not(.shinobi-mode) .app>.sidebar .aside-bottom{display:none!important}
+ body:not(.shinobi-mode) .app>.sidebar .tabs{
+  display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-template-rows:auto!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;gap:2px!important;overflow:hidden!important;margin:0!important;padding:0!important;box-sizing:border-box!important;
+ }
+ body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab]:not(.legacy-route){
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;height:62px!important;min-height:62px!important;
+  margin:0!important;padding:6px 1px!important;box-sizing:border-box!important;border-radius:10px!important;overflow:hidden!important;
+  font-size:10px!important;line-height:1.15!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap!important;
+ }
+ body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab].legacy-route,
+ body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab][hidden],
+ body:not(.shinobi-mode) .app>.sidebar .desktop-tab-label,
+ body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab]::before,
+ body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab]::after{display:none!important}
+ body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab] .mobile-tab-icon{display:flex!important;flex:0 0 22px!important;width:22px!important;height:22px!important;margin:0!important;align-items:center!important;justify-content:center!important}
+ body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab] .mobile-tab-icon svg{display:block!important;width:22px!important;height:22px!important}
+ body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab] .mobile-tab-label{
+  display:block!important;flex:0 0 auto!important;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;
+  font:600 10px/1.2 system-ui,sans-serif!important;text-align:center!important;text-transform:none!important;letter-spacing:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+ }
+ body:not(.shinobi-mode) .content{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))!important;min-width:0}
+ #easySaveStatus{bottom:calc(86px + env(safe-area-inset-bottom,0px))!important}
+}
+@media(max-width:360px){body:not(.shinobi-mode) .app>.sidebar .tabs>.tab[data-tab] .mobile-tab-label{font-size:9px!important}}
+</style></body
   ></html
 >
