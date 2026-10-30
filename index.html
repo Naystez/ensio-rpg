@@ -4499,6 +4499,14 @@
           (x.type !== "Musculation" || exercises(x.exercises));
         function validate(key, v) {
           safeTree(v);
+          if (key === "ensio-rachid-weekly-config-v1" &&
+            !(Array.isArray(v) && v.length === 4 &&
+              new Set(v.map(q=>q.id)).size === 4 &&
+              v.every(q=>object(q) && [910001,910002,910003,910004].includes(q.id) &&
+                modules.includes(q.module) && typeof q.name === "string" && q.name.trim().length > 0 && q.name.length <= 100 &&
+                Number.isInteger(q.target) && q.target >= 1 && q.target <= 21 &&
+                Number.isInteger(q.xp) && q.xp >= 0 && q.xp <= 250)))
+            fail("Quêtes hebdomadaires invalides");
           if (
             key === "ensio-rachid-inbox-v1" &&
             (!object(v) ||
@@ -4515,7 +4523,7 @@
                   typeof x.read === "boolean" &&
                   typeof x.at === "string" &&
                   Number.isFinite(Date.parse(x.at)) &&
-                  ["rpg", "training", "dungeons"].includes(x.route) &&
+                  ["rpg", "training", "dungeons", "colleagues"].includes(x.route) &&
                   [
                     "career",
                     "meeting",
@@ -6861,7 +6869,7 @@
         ><nav class="tabs"
           ><button class="tab active" data-tab="dashboard">🏠 Accueil</button
           ><button class="tab" data-tab="quests">⚔️ Quêtes</button
-          ><button class="tab" data-tab="rpg">🏢 Carrière</button
+          ><button class="tab" data-tab="colleagues">👥 Collègues</button><button class="tab" data-tab="rpg">🏢 Carrière</button
           ><button
             class="tab legacy-route"
             hidden
@@ -6996,11 +7004,6 @@
                   id="dailyQuest"
                   style="margin-top: 16px"
                 ></div></div></div
-            ><div class="home-actions"
-              ><button data-nav="quests">⚔ Mes quêtes</button
-              ><button data-nav="dungeons"
-                >🏢 Découvrir les services</button
-              ></div
             ><div class="section"
               ><h2>✦ LES QUATRE VOIES</h2
               ><div class="modulegrid" id="modules"></div></div
@@ -7067,7 +7070,7 @@
                 >✎ Personnaliser les quêtes</button
               ></div
             ><div id="questEditor" class="quest-editor hidden"></div
-            ><div class="quest-zone" id="questModulesSeparate"></div></section
+            ><div class="quest-zone" id="questModulesSeparate"></div><div class="quest-editor-head"><div><span class="eyebrow">RENDEZ-VOUS DE LA SEMAINE</span><h3>📅 Quêtes hebdomadaires</h3><p id="ensioWeekLabel"></p></div><button type="button" class="quest-edit-toggle" id="weeklyEditToggle" aria-expanded="false">✎ Personnaliser les quêtes hebdomadaires</button></div><div id="weeklyEditor" class="panel hidden"></div><div class="quest-zone" id="weeklyQuestModules"></div></section
           ><section id="training" class="hidden"
             ><div class="page-heading"
               ><span class="eyebrow">ENSIO EST · ENTRAÎNEMENT</span
@@ -7110,7 +7113,7 @@
               ><button class="selected" data-period="30">30 jours</button
               ><button data-period="90">90 jours</button></div
             ><div id="analyticsRoot"></div></section
-          ><section id="titles" class="hidden"
+          ><section id="colleagues" class="hidden"><div class="page-heading"><h2>👥 Mes collègues</h2><p>Rencontres, alliés et rivalités</p></div></section><section id="titles" class="hidden"
             ><h2>♛ TITRES & RANGS À DÉBLOQUER</h2
             ><p class="topNote"
               >Titres déverrouillés automatiquement selon les niveaux de chaque
@@ -8109,7 +8112,7 @@
             year: "numeric",
           });
         const t = today(),
-          te = entries.filter((e) => e.date === t),
+          te = entries.filter((e) => e.date === t && !e.weekly),
           dp = total(te.filter((e) => e.xp > 0)),
           net = total(te),
           g = xpOf(),
@@ -8218,7 +8221,7 @@
           })
           .join("");
         const questDayEntries = entries.filter(
-          (e) => e.date === activeQuestDate(),
+          (e) => e.date === activeQuestDate() && !e.weekly,
         );
         const qhtml = mods
           .map((m) => {
@@ -8478,7 +8481,7 @@
           }
           const earned = total(
             entries.filter(
-              (x) => x.date === t && x.module === q.module && x.xp > 0,
+              (x) => x.date === t && !x.weekly && x.module === q.module && x.xp > 0,
             ),
           );
           if (q.xp > 0 && earned + q.xp > 250) return;
@@ -9062,7 +9065,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
       const sportId = () =>
         Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
       const sportEsc = (v) => esc(v ?? "");
-      let sportPage = "village",
+      let sportPage = "home",
         sportEdit = null,
         sportSportChoice = "Musculation",
         sportEntryDate = null;
@@ -9185,6 +9188,9 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           lv: Math.floor(xp / 200) + 1,
           rank: SPORT_RANKS[Math.min(6, Math.floor(xp / 1000))],
         };
+      }
+      function sportIsBodyweight(ex) {
+        return ex.mode === "bodyweight" || (!ex.mode && /tractions|pompes|dips|gainage|squat au poids/i.test(ex.name));
       }
       function sportLast(ex) {
         for (const sess of [...sport.sessions].reverse()) {
@@ -9362,28 +9368,9 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         const l = sportLevel(),
           count = sport.sessions.length,
           unlocked = SPORT_GEAR.filter((g) => count >= g[2]);
-        let html = `<div class="training-hero"><div class="training-eyebrow">ENSIO EST / COACHING AVEC YAN</div><h2>ENTRAÎNEMENT</h2><p>Choisis ton programme, enregistre tes séries et retrouve Yan après la séance.</p></div><nav class="training-nav" aria-label="Rubriques Entraînement"><button class="${sportPage === "village" ? "active" : ""}" data-sport="page" data-page="village">Bilan</button><button class="${["home", "library", "programs"].includes(sportPage) ? "active" : ""}" data-sport="page" data-page="home">Séances</button><button class="${sportPage === "missions" ? "active" : ""}" data-sport="page" data-page="missions">Défis</button><button class="${sportPage === "progress" ? "active" : ""}" data-sport="page" data-page="progress">Suivi</button></nav>`;
+        let html = `<div class="training-hero"><div class="training-eyebrow">ENSIO EST / COACHING AVEC YAN</div><h2>ENTRAÎNEMENT</h2><p>Choisis ton programme, enregistre tes séries et retrouve Yan après la séance.</p></div><nav class="training-nav" aria-label="Rubriques Entraînement"><button class="${sportPage === "home" ? "active" : ""}" data-sport="page" data-page="home">Séances</button><button class="${sportPage === "programs" ? "active" : ""}" data-sport="page" data-page="programs">Programmes</button><button class="${sportPage === "library" ? "active" : ""}" data-sport="page" data-page="library">Bibliothèque</button><button class="${sportPage === "missions" ? "active" : ""}" data-sport="page" data-page="missions">Défis</button><button class="${sportPage === "progress" ? "active" : ""}" data-sport="page" data-page="progress">Suivi</button></nav>`;
         if (sportPage === "home")
-          html += `<div class="sport-card sport-launch sport-date-compact"><label class="sport-field">📅 Date de la mission<input type="date" data-sport-date value="${sportChosenDate()}" max="${today()}"></label><label class="sport-field">Discipline<select id="sportDiscipline" data-sport-discipline><option value="Musculation" ${sportSportChoice === "Musculation" ? "selected" : ""}>🏋️ Musculation</option><option value="Autre" ${sportSportChoice === "Autre" ? "selected" : ""}>➕ Autre sport</option></select></label></div>`;
-        if (sportPage === "village") {
-          const active = sport.active,
-            last = [...sport.sessions]
-              .sort((a, b) => String(a.date).localeCompare(String(b.date)))
-              .at(-1);
-          const done = active
-              ? (active.exercises || []).reduce(
-                  (n, ex) => n + ex.sets.filter((set) => set.done).length,
-                  0,
-                )
-              : 0,
-            totalSets = active
-              ? (active.exercises || []).reduce(
-                  (n, ex) => n + ex.sets.length,
-                  0,
-                )
-              : 0;
-          html += `<div class="sport-card shinobi-village-intro"><div class="training-eyebrow">🏯 TON POINT DE DÉPART</div><h2>Ton point de départ · Yan prend le relais</h2><p>${active ? "Ta séance en cours t’attend. Reprends là où tu t’es arrêté." : "Prêt pour ta prochaine séance ? Retrouve tes programmes et choisis ton entraînement."}</p>${active ? `<div class="shinobi-session-preview"><h3>⚔️ ${sportEsc(active.name)}</h3><p>${sportEsc(active.date)} · ${done}/${totalSets} séries validées</p><div class="shinobi-chakra"><div style="width:${totalSets ? Math.round((done / totalSets) * 100) : 0}%"></div></div></div>` : ""}<div class="shinobi-village-actions"><button class="primary" data-sport="${active ? "resume" : "page"}" ${active ? "" : 'data-page="home"'}>${active ? "▶ Reprendre ma séance" : "⚔️ Commencer mon entraînement"} →</button></div>${last ? `<p class="sport-muted">Dernière séance enregistrée : ${sportEsc(last.name)} · ${sportEsc(last.date)}</p>` : '<p class="sport-muted">Ta première séance commence dans Entraînement.</p>'}</div>`;
-        }
+          html += `<div class="sport-card sport-launch sport-date-compact"><label class="sport-field">📅 Date de la séance<input type="date" data-sport-date value="${sportChosenDate()}" max="${today()}"></label><label class="sport-field">Discipline<select id="sportDiscipline" data-sport-discipline><option value="Musculation" ${sportSportChoice === "Musculation" ? "selected" : ""}>🏋️ Musculation</option><option value="Autre" ${sportSportChoice === "Autre" ? "selected" : ""}>➕ Autre sport</option></select></label></div>`;
         if (sportPage === "missions") {
           html += shinobiQuestView(l);
           const missions = [
@@ -9417,7 +9404,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           html += `<div class="sport-card"><h2 class="sport-title">⚔ ${sportEsc(a.name)}</h2><p>📅 ${sportEsc(a.date)} · ${a.exercises.reduce((n, e) => n + e.sets.filter((x) => x.done).length, 0)} / ${a.exercises.reduce((n, e) => n + e.sets.length, 0)} séries validées · sauvegarde automatique</p><div class="sport-progress-track"><div class="sport-progress-fill" style="width:${a.exercises.reduce((n, e) => n + e.sets.length, 0) ? Math.round((100 * a.exercises.reduce((n, e) => n + e.sets.filter((x) => x.done).length, 0)) / a.exercises.reduce((n, e) => n + e.sets.length, 0)) : 0}%"></div></div><p class="sport-muted">🔒 Modèle permanent préservé. Les changements d'aujourd'hui sont ponctuels.</p>${a.exercises
             .map(
               (ex, i) =>
-                `<details style="--muscle:${sportMuscleColor(ex.name)};--muscle-glow:${sportMuscleColor(ex.name)}26" class="sport-ex sport-ex-compact ${ex.sets.length && ex.sets.every((x) => x.done) ? "sport-ex-complete" : ""}" ${sportOpenExercise === i ? "open" : ""}><summary data-sport-summary="${i}"><strong>${ex.sets.length && ex.sets.every((x) => x.done) ? "✅ " : ""}${sportEsc(ex.name)}</strong><span>${ex.sets.filter((x) => x.done).length}/${ex.sets.length} séries ✓</span><small class="shinobi-ex-summary">${ex.sets[0]?.kg || 0} kg × ${ex.sets[0]?.reps || 0} rép.</small></summary><p class="sport-note">Dernière fois : ${sportEsc(sportLast(ex.name))}</p><p class="sport-note">Objectif de référence : ${sportEsc(
+                `<details style="--muscle:${sportMuscleColor(ex.name)};--muscle-glow:${sportMuscleColor(ex.name)}26" class="sport-ex sport-ex-compact ${ex.sets.length && ex.sets.every((x) => x.done) ? "sport-ex-complete" : ""}" ${sportOpenExercise === i ? "open" : ""}><summary data-sport-summary="${i}"><strong>${ex.sets.length && ex.sets.every((x) => x.done) ? "✅ " : ""}${sportEsc(ex.name)}</strong><span>${ex.sets.filter((x) => x.done).length}/${ex.sets.length} séries ✓</span><small class="shinobi-ex-summary">${sportIsBodyweight(ex) ? "Poids du corps" + (ex.sets[0]?.kg ? " + " + ex.sets[0].kg + " kg" : "") : (ex.sets[0]?.kg || 0) + " kg"} × ${ex.sets[0]?.reps || 0} rép.</small></summary><p class="sport-note">Dernière fois : ${sportEsc(sportLast(ex.name))}</p><p class="sport-note">Objectif de référence : ${sportEsc(
                   (
                     sport.programs.find((p) => p.id === a.programId)
                       ?.exercises || []
@@ -9425,7 +9412,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                     .find((x) => x.name === ex.name)
                     ?.sets.map((x) => x.kg + " kg × " + x.reps)
                     .join(" · ") || "Exercice ponctuel",
-                )}</p><div class="sport-actions"><button data-sport="renameActive" data-index="${i}">Remplacer</button><button data-sport="addSet" data-index="${i}">+ Série</button><button data-sport="completeExercise" data-index="${i}">✓ Tout valider</button><button data-sport="uncheckExercise" data-index="${i}">↶ Tout décocher</button><button data-sport="removeActiveEx" data-index="${i}">Retirer</button></div>${ex.sets.map((set, j) => `<div class="sport-row"><label class="sport-field">Série ${j + 1}<span> ${set.done ? "✓ Terminée" : "À faire"}</span></label><label class="sport-field">kg<input type="number" min="0" step="0.5" data-sport-field="kg" data-ex="${i}" data-set="${j}" value="${sportEsc(set.kg)}"></label><label class="sport-field">Rép.<input type="number" min="0" step="1" data-sport-field="reps" data-ex="${i}" data-set="${j}" value="${sportEsc(set.reps)}"></label><div><input class="sport-check" aria-label="Série terminée" type="checkbox" data-sport-field="done" data-ex="${i}" data-set="${j}" ${set.done ? "checked" : ""}><button data-sport="removeSet" data-index="${i}" data-set="${j}" title="Supprimer la série">×</button></div></div>`).join("")}</details>`,
+                )}</p><div class="sport-actions"><button data-sport="renameActive" data-index="${i}">Modifier / remplacer</button><button data-sport="addSet" data-index="${i}">+ Série</button><button data-sport="completeExercise" data-index="${i}">✓ Tout valider</button><button data-sport="uncheckExercise" data-index="${i}">↶ Tout décocher</button><button data-sport="removeActiveEx" data-index="${i}">Retirer</button></div>${ex.sets.map((set, j) => `<div class="sport-row"><label class="sport-field">Série ${j + 1}<span> ${set.done ? "✓ Terminée" : "À faire"}</span></label><label class="sport-field">${sportIsBodyweight(ex) ? "Lest (kg, facultatif)" : "Charge (kg)"}<input type="number" min="0" step="0.5" data-sport-field="kg" data-ex="${i}" data-set="${j}" value="${sportEsc(set.kg)}"></label><label class="sport-field">Rép.<input type="number" min="0" step="1" data-sport-field="reps" data-ex="${i}" data-set="${j}" value="${sportEsc(set.reps)}"></label><div><input class="sport-check" aria-label="Série terminée" type="checkbox" data-sport-field="done" data-ex="${i}" data-set="${j}" ${set.done ? "checked" : ""}><button data-sport="removeSet" data-index="${i}" data-set="${j}" title="Supprimer la série">×</button></div></div>`).join("")}</details>`,
             )
             .join(
               "",
@@ -9435,10 +9422,10 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           return;
         }
         if (sportPage === "home") {
-          html += `<div class="sport-card"><h2 class="sport-title">⚔ CHOISIR SA MISSION</h2>${sportSportChoice === "Musculation" ? `<h3 class="sport-title">⭐ PROGRAMMES DE RÉFÉRENCE</h3><div class="sport-grid">${sport.programs.map(sportProgramCard).join("") || "<p>Aucun entraînement enregistré.</p>"}</div><div class="sport-actions"><button data-sport="newProgram">+ Nouveau programme</button><button data-sport="page" data-page="library">⚙ Gérer les exercices</button></div>` : `<div class="sport-row"><label class="sport-field">Sport<input id="sportCustomName" placeholder="Ex. Tennis, football, natation…" maxlength="80"></label><label class="sport-field">Durée (min)<input id="sportCustomMinutes" type="number" min="1" value="60"></label></div><div class="sport-row"><label class="sport-field">Intensité<select id="sportCustomIntensity"><option>Modérée</option><option>Faible</option><option>Élevée</option></select></label><label class="sport-field">Distance (km, facultatif)<input id="sportCustomDistance" type="number" min="0" step="0.1" placeholder="—"></label></div><label class="sport-field">Notes<input id="sportCustomNotes" placeholder="Sensations, performance…"></label><div class="sport-actions"><button class="primary" data-sport="saveCustomSport">✓ Enregistrer la séance</button></div>`}</div>`;
+          html += `<div class="sport-card"><h2 class="sport-title">Commencer un entraînement</h2>${sportSportChoice === "Musculation" ? `<p>Commence une séance libre ou utilise un programme enregistré.</p><div class="sport-grid"><div class="sport-card"><h3>Nouvelle séance</h3><p>Pars de zéro et ajoute les exercices de ton choix.</p><button class="primary" data-training="free">+ Séance libre</button></div><div class="sport-card"><h3>Depuis un programme</h3><p>Retrouve tes exercices, séries et charges de référence.</p><button data-sport="page" data-page="programs">Choisir un programme →</button></div></div><div class="sport-actions"><button data-sport="page" data-page="library">📚 Bibliothèque d’exercices</button></div>` : `<div class="sport-row"><label class="sport-field">Sport<input id="sportCustomName" placeholder="Ex. Tennis, football, natation…" maxlength="80"></label><label class="sport-field">Durée (min)<input id="sportCustomMinutes" type="number" min="1" value="60"></label></div><div class="sport-row"><label class="sport-field">Intensité<select id="sportCustomIntensity"><option>Modérée</option><option>Faible</option><option>Élevée</option></select></label><label class="sport-field">Distance (km, facultatif)<input id="sportCustomDistance" type="number" min="0" step="0.1" placeholder="—"></label></div><label class="sport-field">Notes<input id="sportCustomNotes" placeholder="Sensations, performance…"></label><div class="sport-actions"><button class="primary" data-sport="saveCustomSport">✓ Enregistrer la séance</button></div>`}</div>`;
         }
         if (sportPage === "library") {
-          html += `<h2 class="sport-title">📚 Bibliothèque d’exercices</h2><div class="sport-actions"><button class="primary" data-sport="addLibrary">+ Ajouter un exercice</button></div><div class="sport-grid">${sport.library.map((x) => `<div class="sport-card"><h3>${sportEsc(x)}</h3><p>${sportEsc(sportLast(x))}</p><button data-sport="removeLibrary" data-name="${sportEsc(x)}">Supprimer</button></div>`).join("") || '<p class="sport-muted">Ajoute tes exercices habituels, puis réutilise-les dans plusieurs programmes.</p>'}</div>`;
+          html += `<div id="ensioLibraryMount"></div>`;
         }
         if (sportPage === "programs") {
           html += `<h2 class="sport-title">⭐ Programmes permanents</h2><div class="sport-actions"><button class="primary" data-sport="newProgram">+ Nouveau programme</button></div><div class="sport-grid">${sport.programs.map(sportProgramCard).join("") || "<p>Tu peux créer ton programme progressivement.</p>"}</div>`;
@@ -9608,6 +9595,9 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         sportSave();
       }
       function sportStart(p) {
+        if (!p) return;
+        sportPage = "home";
+        sportSportChoice = "Musculation";
         sportOpenExercise = null;
         if (
           sport.active &&
@@ -9658,7 +9648,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           distance,
         });
         sportSportChoice = "Musculation";
-        sportPage = "village";
+        sportPage = "home";
         if (sportSave()) sportShowFinish(sport.sessions.at(-1), 40);
       }
 
@@ -9669,16 +9659,16 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           remaining = next ? (index + 1) * 1000 - l.xp : 0;
         const overlay = document.createElement("div");
         overlay.className = "shinobi-finish-backdrop";
-        overlay.innerHTML = `<div class="shinobi-finish-panel" role="dialog" aria-modal="true" aria-labelledby="finishTitleV69"><div class="seal">🍃</div><h2 id="finishTitleV69">⚔️ ENTRAÎNEMENT TERMINÉ</h2><p><strong>${sportEsc(session.name)}</strong></p><ul><li>✓ Séance enregistrée</li><li>${chakra >= 0 ? "+" : ""}${chakra} points de maîtrise${session.pr ? " · " + session.pr + " record(s)" : ""}</li><li>${next ? remaining + " points avant le grade " + sportEsc(next) : "Grade maximal atteint"}</li><li>✓ Défis sportifs actualisés</li></ul><p class="sport-muted">La quête Sport principale reste à valider dans Quêtes. Retour automatique au bilan dans 6 secondes.</p><button type="button" id="shinobiFinishClose">Retourner au bilan</button></div>`;
+        overlay.innerHTML = `<div class="shinobi-finish-panel" role="dialog" aria-modal="true" aria-labelledby="finishTitleV69"><div class="seal">🍃</div><h2 id="finishTitleV69">⚔️ ENTRAÎNEMENT TERMINÉ</h2><p><strong>${sportEsc(session.name)}</strong></p><ul><li>✓ Séance enregistrée</li><li>${chakra >= 0 ? "+" : ""}${chakra} points de maîtrise${session.pr ? " · " + session.pr + " record(s)" : ""}</li><li>${next ? remaining + " points avant le grade " + sportEsc(next) : "Grade maximal atteint"}</li><li>✓ Défis sportifs actualisés</li></ul><p class="sport-muted">La quête Sport principale reste à valider dans Quêtes. Retour automatique aux séances dans 6 secondes.</p><button type="button" id="shinobiFinishClose">Retourner aux séances</button></div>`;
         document.body.appendChild(overlay);
         const close = () => {
           clearTimeout(timer);
           overlay.remove();
-          sportPage = "village";
+          sportPage = "home";
           sportRender();
           document
             .querySelector(
-              '#trainingRoot [data-sport="page"][data-page="village"]',
+              '#trainingRoot [data-sport="page"][data-page="home"]',
             )
             ?.focus();
         };
@@ -9736,7 +9726,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         sport.sessions.push(a);
         sport.active = null;
         sportOpenExercise = null;
-        sportPage = "village";
+        sportPage = "home";
         if (sportSave()) sportShowFinish(a, sportLevel().xp - masteryBefore);
       }
       document.addEventListener("click", (e) => {
@@ -10468,7 +10458,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               stage: 1,
               rank: "E",
             },
-            daily = total(entries.filter((e) => e.date === today())),
+            daily = total(entries.filter((e) => e.date === today() && !e.weekly)),
             companion = window.rpgLifeSystem?.activeCompanion();
           root.innerHTML = `<div class="rpg-panel" data-hunter-profile><h3>🧙 Profil de Rachid</h3><div class="system-stage"><div class="system-avatar tier${visual.stage - 1}">${visual.icon}</div><div><label>Nom du collaborateur <input id="rpgName" maxlength="32" value="${safe(state.name)}" style="background:#0a1729;border:1px solid #557398;border-radius:8px;color:white;padding:10px;max-width:100%;margin-left:8px"></label><p><span class="system-rank">ACCRÉDITATION ${safe(visual.rank)}</span> · Niveau ${l}</p><p class="system-muted">${safe(current[0])} · Accréditation visuelle ${visual.stage}/6</p></div></div><div class="system-grid"><div class="system-tile">Mission du jour<b>${daily} / 1 000 XP</b><div class="system-progress"><div style="width:${Math.min(100, Math.max(0, daily / 10))}%"></div></div><small>${daily >= 1000 ? "Mission parfaite" : daily >= 500 ? "Objectif quotidien atteint" : "Objectif conseillé : 500 XP"}</small></div></div><p class="rpg-note">Tes quêtes et tes séances font avancer l’histoire. Les rencontres se débloquent au fil des niveaux, sans caractéristiques ni accessoires à gérer.</p>${window.rpgLifeSystem?.companionMarkup() || ""}</div>
 <div class="rpg-panel"><h3>🗺️ Plan des services</h3><div class="rpg-path">${regions.map((r, i) => `<span class="${l >= r[1] ? "active" : ""}">${r[2]} ${r[0]}<br><small>Niveau ${r[1]} ${l >= r[1] ? "✓" : "🔒"}</small></span>${i < regions.length - 1 ? "→" : ""}`).join("")}</div><p class="rpg-note">Les services deviennent accessibles avec ton niveau global.</p></div>
@@ -10484,26 +10474,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           document.dispatchEvent(new Event("ensio-rachid:panels"));
         }
         function renderBosses() {
-          const root = document.getElementById("rpgBosses");
-          if (!root) return;
-          const combat = combatProfile();
-          root.innerHTML =
-            '<div class="rpg-panel"><h3>🤝 Soutenances & comité de direction</h3><p class="rpg-note">Termine le défi d’un service pour accéder à sa soutenance. Présente tes arguments pour convaincre tes collègues. Chaque argument vaut 25 points de conviction, sans équipement à gérer.</p><p class="rpg-note">Défi de service → soutenance → nouveau contact. Les soutenances ne donnent pas d’XP supplémentaire.</p><div class="rpg-grid">' +
-            bosses
-              .map((b) => {
-                let unlocked = false;
-                try {
-                  unlocked = !!dungeonClaims[b.id];
-                } catch (e) {}
-                const v = state.bosses[b.id] || {
-                  hp: b.hp,
-                  turn: 0,
-                  won: false,
-                };
-                return `<div class="rpg-card ${unlocked ? "" : "locked"}"><strong>🤝 ${b.name}</strong><p>${unlocked ? (v.won ? "🏆 Convaincu" : "Soutenance disponible") : "🔒 Terminer le défi du service"}</p><div class="rpg-boss-health"><div style="width:${Math.max(0, Math.min(100, (v.hp / b.hp) * 100))}%"></div></div><p>${Math.max(0, v.hp)} / ${b.hp} · résistance du comité</p><p class="rpg-note">⚔️ ${combat.damage} points de conviction par argument${combat.companion ? " · Allié : " + safe(combat.companion.name) : ""}</p><button data-rpg-attack="${b.id}" ${!unlocked || v.won ? "disabled" : ""}>💬 Présenter un argument</button><div class="rpg-boss-log">${safe(v.log || "")}</div></div>`;
-              })
-              .join("") +
-            "</div></div>";
+          document.getElementById("rpgBosses")?.replaceChildren();
         }
         function renderNarrative() {
           document
@@ -11002,22 +10973,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             sys.active = null;
             save();
           }
-          root.innerHTML = `<div class="system-console"><span class="system-eyebrow">[ NIVEAUX D’EXIGENCE ]</span><h3>🏢 Accréditations des services E → S</h3><p class="system-muted">Ces accréditations donnent un repère de difficulté. Les défis de service déterminent les validations et récompenses.</p><div class="system-grid">${[
-            ["E", 3],
-            ["D", 5],
-            ["C", 7],
-            ["B", 10],
-            ["A", 14],
-            ["S", 21],
-          ]
-            .map(
-              ([r, d], i) =>
-                `<div class="system-tile ${rank(v.l) < r ? "" : ""}"><span class="system-rank">Rang ${r}</span><b>${d} jours</b><small>${["Initiation", "Exploration", "Endurance", "Maîtrise", "Expert", "Légendaire"][i]}</small></div>`,
-            )
-            .join(
-              "",
-            )}</div><button class="system-button" data-sys-nav="dungeons">Consulter les défis des services →</button></div>
-`;
+          root.replaceChildren();
         }
         const section = document.getElementById("rpg");
         if (section) {
@@ -11109,58 +11065,6 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         render();
       })();
     </script>
-    <script id="unified-ranks-v61">
-      (function () {
-        const thresholds = [0, 6, 16, 26, 41, 61];
-        const rank = (l) =>
-          ["E", "D", "C", "B", "A", "S"][
-            thresholds.reduce((acc, n, i) => (l >= n ? i : acc), 0)
-          ];
-        function update() {
-          const dashboard = document.getElementById("dashboard");
-          if (!dashboard) return;
-          let box = document.getElementById("moduleRanksV61");
-          if (!box) {
-            box = document.createElement("div");
-            box.id = "moduleRanksV61";
-            box.className = "module-ranks-v61";
-            const anchor = dashboard.querySelector("#modules");
-            if (anchor) anchor.parentElement.insertBefore(box, anchor);
-            else dashboard.appendChild(box);
-          }
-          const modules = [
-            ["❤️", "Santé"],
-            ["🥗", "Nutrition"],
-            ["💪", "Sport"],
-            ["🧠", "Discipline"],
-          ];
-          let html =
-            '<h3>⚔️ Rangs des quatre voies</h3><div class="module-ranks-v61-grid">';
-          for (const [icon, name] of modules) {
-            let l = 0;
-            try {
-              const xp = entries
-                .filter((e) => e.module === name)
-                .reduce((a, e) => a + (Number(e.xp) || 0), 0);
-              l = level(xp, "module")[0] || 0;
-            } catch (e) {}
-            html += `<div>${icon} ${name}<b>Rang ${rank(l)}</b><small>Niveau ${l}</small></div>`;
-          }
-          box.innerHTML = html + "</div>";
-        }
-        document.addEventListener("click", (e) => {
-          if (
-            e.target.closest(
-              '[data-tab="dashboard"],[data-nav="dashboard"],[data-quest],[data-claim-dungeon]',
-            )
-          )
-            setTimeout(update, 70);
-        });
-        document.addEventListener("ensio-rachid:changed", update);
-        update();
-      })();
-    </script>
-
     <script id="v68-finalize">
       // V6.8: explicit refresh after the final render chain has settled.
       const renderV68Previous = render;
@@ -11185,6 +11089,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           quests: "QUÊTES",
           rpg: "CARRIÈRE",
           dungeons: "CARRIÈRE · DÉFIS",
+          colleagues: "COLLÈGUES",
           titles: "CARRIÈRE · DISTINCTIONS",
           analytics: "PROGRESSION",
           history: "PROGRESSION · HISTORIQUE",
@@ -11221,7 +11126,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 group,
                 group === "rpg"
                   ? [
-                      ["rpg", "🪪 Profil"],
+                      ["rpg", "📖 Histoire"],
                       ["dungeons", "🏗️ Défis"],
                       ["titles", "♛ Titres"],
                     ]
@@ -11430,7 +11335,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 .querySelectorAll(
                   '[data-sport="completeExercise"],[data-sport="uncheckExercise"]',
                 )
-                .forEach((b) => b.remove());
+                .forEach((b) => el.insertBefore(b, el.querySelector(".sport-row")));
               const ex = sport.active.exercises[i];
               const remove = document.createElement("button");
               remove.type = "button";
@@ -11536,6 +11441,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           ["dashboard", "Accueil", "Accueil", "home"],
           ["quests", "Quêtes", "Quêtes", "quests"],
           ["rpg", "Carrière", "Carrière", "hero"],
+          ["colleagues", "Collègues", "Collègues", "hero"],
           ["training", "Entraînement", "Entraînement", "training"],
           ["analytics", "Progression", "Progrès", "progress"],
           ["settings", "Paramètres", "Réglages", "settings"],
@@ -11785,7 +11691,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 0,
             side: "Accueil & dossiers",
             tag: "L’aide pour les questions RH",
-            line: "Je peux t’expliquer. Mais écoute cette fois, je viens de te le dire il y a cinq minutes.",
+            line: "Rachid, tu as une façon de mettre les gens à l’aise ! Viens, je te montre le dossier. J’aime bien travailler avec toi.",
             objective:
               "Prends le temps de personnaliser tes habitudes. Même une grande carrière commence par un dossier clair.",
             action: "Mes quêtes",
@@ -11799,7 +11705,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 3,
             side: "Repère RH",
             tag: "L’autre Amélie des RH",
-            line: "Quand tu envoies un mail à Amélie, vérifie laquelle. Ce serait bien qu’on arrête de se renvoyer tes messages.",
+            line: "J’ai reconnu ton mail tout de suite, Rachid. Tu progresses vite, et tu gardes le sourire : c’est agréable de t’avoir dans l’équipe.",
             objective:
               "La régularité compte plus que la vitesse : les conditions des défis restent affichées dans les services.",
             action: "Voir les défis",
@@ -11813,7 +11719,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 3,
             side: "Passeuse de compétences",
             tag: "S’occupe des formations",
-            line: "Dis-moi ce que tu veux apprendre et on regarde. On va commencer par quelque chose qui te sert vraiment.",
+            line: "Curieux, motivé et toujours agréable… Tu marques des points, Rachid. Dis-moi ce que tu veux apprendre, je te trouve une formation.",
             objective:
               "Apprentissage et lecture peuvent être personnalisés dans tes quêtes Discipline.",
             action: "Mes quêtes Discipline",
@@ -11868,7 +11774,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 16,
             side: "Gardienne des comptes",
             tag: "Veut des comptes qui tombent juste",
-            line: "Tu m’envoies le bon montant avec le bon document, et ça ira très bien. Ça nous évitera de nous écrire six fois.",
+            line: "Un dossier complet et le sourire en prime ? Tu sais te faire apprécier, Rachid. Je te garde une place pour le café.",
             objective:
               "Tes XP restent calculés à partir des validations. Ici, même l’ambition doit tomber juste.",
             action: "Mes quêtes",
@@ -11882,7 +11788,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 16,
             side: "Repère comptable",
             tag: "Remarque vite ce qui manque",
-            line: "Il manque la pièce jointe. Oui, encore. Vérifie avant de me dire qu’elle est dans le mail.",
+            line: "Cette fois, la pièce jointe est là ! Je te taquine, Rachid : j’aime bien quand tu passes, tu mets de bonne humeur.",
             objective:
               "Les petites actions régulières construisent la progression. Aucun bonus caché dans une pièce jointe.",
             action: "Mes quêtes",
@@ -11910,7 +11816,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 20,
             side: "Repère analytique",
             tag: "Aide à suivre le travail",
-            line: "Je t’ai préparé la liste. Tu peux la regarder avant de venir me demander où tu en es.",
+            line: "Je t’ai préparé la liste, Rachid. Avec toi les réunions sont plus sympas, et tu écoutes vraiment les idées des autres. Ça me plaît.",
             objective:
               "Consulte les défis pour préparer ta progression, sans confondre prévision et XP réellement gagnés.",
             action: "Voir les défis",
@@ -11924,7 +11830,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 26,
             side: "Alliée créative",
             tag: "Revient à son budget dès que quelqu’un achète quelque chose",
-            line: "Vous avez acheté quoi, encore ? Très bien. Moi, je demande toujours les moyens de faire mon travail. J’aimerais bien qu’on m’écoute aussi quand je parle d’autre chose que de ma tête.",
+            line: "Tu présentes de mieux en mieux, Rachid. Et tu as du charme quand tu défends une idée sans te prendre au sérieux. Tu viens préparer la prochaine présentation avec moi ?",
             objective:
               "Dans cette caricature fictive, Athéna est considérée comme la plus belle femme d’Ensio. Elle prend progressivement des responsabilités dans la communication du projet, pour son travail.",
             action: "Voir le comité de direction",
@@ -11938,7 +11844,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 26,
             side: "L’interlude du bureau",
             tag: "Aime discuter pendant les pauses",
-            line: "Tu prends un café ? J’ai un truc à te raconter. Oui, ça peut attendre, mais maintenant que tu es là…",
+            line: "Rachid, viens prendre un café ! Tu as toujours un mot gentil, et j’aime beaucoup ton sourire. La pause est plus sympa quand tu es là.",
             objective:
               "Une parenthèse de bureau dans le récit. Les dialogues et accessoires sont imaginés et ne décrivent pas des faits réels.",
             action: "Retour à mes quêtes",
@@ -11952,7 +11858,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 26,
             side: "Le réseau de Lauriane",
             tag: "Proche de Lauriane",
-            line: "Lauriane a du caractère. Tu as intérêt à suivre si tu veux travailler avec elle. Ou juste lui proposer un café.",
+            line: "Je soutiens Lauriane, tu le sais. Mais je dois reconnaître que tu es attentionné, Rachid, et franchement agréable à côtoyer.",
             objective:
               "Clémence soutient Lauriane dans cette fiction. Leurs répliques ne bloquent pas tes validations.",
             action: "Continuer mes quêtes",
@@ -12008,13 +11914,14 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             level: 14,
             side: "Une collègue sympa, sans rivalité avec Lauriane",
             tag: "Cuisine des muffins que tout le monde adore",
-            line: "J’ai apporté des muffins. Oui, Rachid, tu peux en prendre. Mais tu en laisses pour les autres. Et non, ce n’est pas pour gagner une promotion, j’aime juste cuisiner.",
+            line: "J’ai gardé un muffin pour toi, Rachid. Tu remercies toujours les gens et tu me fais rire : forcément, ça donne envie de te faire plaisir.",
             objective:
               "Chloé travaille aux RH comme Lauriane. Elles s’entendent bien sans compétition. Les pâtisseries de Chloé reviennent dans les pauses et les moments importants de l’histoire.",
             action: "Mes quêtes",
             route: "quests",
           },
         ];
+        people.push({id:"suzy",name:"Suzy",job:"Collègue de Dijon",service:"Agence de Dijon",level:3,side:"Une admiratrice chaleureuse · Fiction",tag:"Trouve toujours un compliment sincère pour Rachid",line:"Rachid, même à Dijon on entend parler de toi ! J’aime ton sourire et ta façon d’encourager les autres. Tu me préviens quand tu passes à l’agence ?",objective:"Suzy revient régulièrement dans la campagne : messages de Dijon, pauses et encouragements. Personnage et affinité entièrement romancés, sans bonus d’XP.",action:"Continuer l’histoire",route:"rpg"});
         const castEncounters = people.map((p) => ({
           id: "person-" + p.id,
           level: p.level,
@@ -12084,7 +11991,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         const daily = document.createElement("div");
         daily.className = "ensio-story";
         daily.id = "ensioToday";
-        dashboard.querySelector(".home-actions").after(daily);
+        dashboard.querySelector(".hero").after(daily);
         const story = document.createElement("div");
         story.className = "ensio-story";
         story.id = "ensioEncounter";
@@ -12100,7 +12007,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         roster.className = "v69-fold";
         roster.id = "ensioPeople";
         roster.innerHTML =
-          '<summary>👥 Collègues, alliés & rivalités · 24 personnages</summary><div class="ensio-people-intro">Comédie fictive : portraits, rivalités et romances sont romancés. Les rencontres se révèlent au fil des niveaux ; les dialogues ne donnent ni bonus ni malus d’XP.</div><div class="ensio-people-grid"></div>';
+          '<summary>👥 Collègues, alliés & rivalités · 25 personnages</summary><div class="ensio-people-intro">Comédie fictive : portraits, rivalités et romances sont romancés. Les rencontres se révèlent au fil des niveaux ; les dialogues ne donnent ni bonus ni malus d’XP.</div><div class="ensio-people-grid"></div>';
         tower.after(roster);
         const about = document.createElement("details");
         about.className = "v69-fold";
@@ -12282,8 +12189,6 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         // Correct the remaining static labels without changing routing identifiers.
         document.querySelector("#rpg .page-heading h2").textContent =
           "🏢 MA CARRIÈRE";
-        document.querySelectorAll(".home-actions button")[1].textContent =
-          "🏢 Découvrir les services";
         document
           .querySelectorAll('.tab[data-tab="rpg"] .desktop-tab-label')
           .forEach((e) => (e.textContent = "🏢 Carrière"));
@@ -13020,6 +12925,768 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
             after: [],
           },
         ];
+        scenes.push(...[
+  {
+    "id": "humour-cafe",
+    "level": 0,
+    "title": "La réunion sans ordre du jour",
+    "cast": "Richard · Rachid · Sébastien · Hervé",
+    "lines": [
+      [
+        "Richard",
+        "On se réunit cinq minutes pour préparer la réunion de demain."
+      ],
+      [
+        "Rachid",
+        "On pourrait pas faire directement celle de demain ?"
+      ],
+      [
+        "Sébastien",
+        "Pas sans la réunion de préparation."
+      ],
+      [
+        "Hervé",
+        "En 1998, on préparait les réunions debout."
+      ],
+      [
+        "Richard",
+        "Ça explique pourquoi elles duraient moins longtemps."
+      ],
+      [
+        "Rachid",
+        "On peut essayer ?"
+      ],
+      [
+        "Hervé",
+        "Non, j’ai une bonne chaise."
+      ]
+    ],
+    "choices": [
+      [
+        "Je propose de supprimer la réunion préparatoire.",
+        "Richard",
+        "Audacieux. Envoie une invitation pour qu’on en discute."
+      ],
+      [
+        "Je note : acheter de moins bonnes chaises.",
+        "Hervé",
+        "Attention à ton budget, jeune homme."
+      ],
+      [
+        "Je vais chercher du café.",
+        "Sébastien",
+        "Enfin une décision opérationnelle."
+      ]
+    ],
+    "after": [
+      [
+        "Richard",
+        "Cinq minutes sont passées. Qui est disponible pour prolonger ?"
+      ]
+    ]
+  },
+  {
+    "id": "humour-imprimante",
+    "level": 0,
+    "title": "L’imprimante choisit son camp",
+    "cast": "Rachid · Lauriane · Sébastien",
+    "lines": [
+      [
+        "Rachid",
+        "Elle imprime tous les dossiers sauf le mien."
+      ],
+      [
+        "Lauriane",
+        "Elle a peut-être lu le titre : « Plan pour devenir PDG ». "
+      ],
+      [
+        "Sébastien",
+        "Attends, je vais redémarrer la file."
+      ],
+      [
+        "Rachid",
+        "Tu sais faire ?"
+      ],
+      [
+        "Sébastien",
+        "Non, mais je le dis avec assurance."
+      ],
+      [
+        "Lauriane",
+        "Tu devrais mettre ça sur ton CV."
+      ],
+      [
+        "Rachid",
+        "C’est déjà dans compétences transversales."
+      ]
+    ],
+    "choices": [
+      [
+        "Je passe au tout numérique.",
+        "Lauriane",
+        "Commence par fermer les trente-sept onglets ouverts."
+      ],
+      [
+        "Je change le titre du document.",
+        "Sébastien",
+        "Mets « Menu du vendredi ». Elle vient d’en imprimer douze."
+      ],
+      [
+        "Lauriane, tu peux essayer pour moi ?",
+        "Lauriane",
+        "Seulement si mon nom apparaît avant le tien sur la page de garde."
+      ]
+    ],
+    "after": [
+      [
+        "Sébastien",
+        "Ça y est, elle imprime."
+      ],
+      [
+        "Lauriane",
+        "Oui. Le dossier de la semaine dernière."
+      ]
+    ]
+  },
+  {
+    "id": "humour-dijon",
+    "level": 3,
+    "title": "Suzy appelle de Dijon",
+    "cast": "Suzy · Rachid · Sébastien · Yan",
+    "lines": [
+      [
+        "Suzy",
+        "Bonjour Rachid ! On m’avait promis un point de cinq minutes, pas un si joli sourire."
+      ],
+      [
+        "Rachid",
+        "La caméra est allumée ?"
+      ],
+      [
+        "Suzy",
+        "Depuis le début. Ton air concentré est très réussi."
+      ],
+      [
+        "Sébastien",
+        "Il lisait le menu de la cantine."
+      ],
+      [
+        "Rachid",
+        "C’est une étude prévisionnelle."
+      ],
+      [
+        "Suzy",
+        "Alors viens faire tes prévisions à Dijon, je t’invite à déjeuner."
+      ],
+      [
+        "Yan",
+        "Vous pouvez clôturer le budget déjeuner ? On a une séance à finir."
+      ]
+    ],
+    "choices": [
+      [
+        "Je réserve un déplacement à Dijon.",
+        "Suzy",
+        "Préviens-moi, je te garde une place. Et un dessert."
+      ],
+      [
+        "Seb, coupe ton micro.",
+        "Sébastien",
+        "Trop tard, j’ai déjà contribué à la transparence du projet."
+      ],
+      [
+        "Yan, tu viens aussi ?",
+        "Yan",
+        "Oui, si personne ne transforme la pause en trois heures."
+      ]
+    ],
+    "after": [
+      [
+        "Suzy",
+        "Rachid, je t’envoie l’adresse. La vraie, pas celle de la salle de sport."
+      ]
+    ]
+  },
+  {
+    "id": "humour-salle",
+    "level": 6,
+    "title": "La série la plus longue",
+    "cast": "Yan · Rachid · Sébastien",
+    "lines": [
+      [
+        "Yan",
+        "Tu as fini ta série, Rachid ?"
+      ],
+      [
+        "Rachid",
+        "Presque. Je répondais à Suzy."
+      ],
+      [
+        "Sébastien",
+        "Combien de répétitions ?"
+      ],
+      [
+        "Rachid",
+        "Huit."
+      ],
+      [
+        "Yan",
+        "Tu as surtout fait huit messages et zéro répétition."
+      ],
+      [
+        "Sébastien",
+        "On appelle ça du développé conversationnel."
+      ],
+      [
+        "Yan",
+        "Pose le téléphone. Il n’y a pas de record à battre dessus."
+      ]
+    ],
+    "choices": [
+      [
+        "Je mets le mode avion.",
+        "Yan",
+        "Très bien. Maintenant, fais décoller les haltères."
+      ],
+      [
+        "Je compte les messages dans ma séance ?",
+        "Sébastien",
+        "Seulement si tu notes le poids du téléphone."
+      ],
+      [
+        "Suzy m’encourage, ça compte.",
+        "Yan",
+        "Alors demande-lui de compter tes répétitions."
+      ]
+    ],
+    "after": [
+      [
+        "Rachid",
+        "Elle a répondu « allez champion ». "
+      ],
+      [
+        "Yan",
+        "Parfait. Elle aussi attend que tu commences."
+      ]
+    ]
+  },
+  {
+    "id": "humour-joint",
+    "level": 10,
+    "title": "La pièce jointe invisible",
+    "cast": "Mélanie · Rachid · Sébastien",
+    "lines": [
+      [
+        "Mélanie",
+        "Merci pour ton mail, Rachid. Il manque juste le document."
+      ],
+      [
+        "Rachid",
+        "Je l’avais glissé dans la fenêtre."
+      ],
+      [
+        "Mélanie",
+        "Oui. Mais tu l’as envoyé ?"
+      ],
+      [
+        "Sébastien",
+        "Il est peut-être dans le cloud."
+      ],
+      [
+        "Mélanie",
+        "Il est surtout dans son imagination."
+      ],
+      [
+        "Rachid",
+        "Je renvoie."
+      ],
+      [
+        "Mélanie",
+        "Tu me fais rire, mais je préfère quand tu joins aussi le fichier."
+      ]
+    ],
+    "choices": [
+      [
+        "Cette fois je vérifie avant.",
+        "Mélanie",
+        "Je crois en toi. C’est un très petit suspense, mais un suspense quand même."
+      ],
+      [
+        "Seb, tu peux automatiser ça ?",
+        "Sébastien",
+        "Oui. Il me faudra six réunions et un fichier exemple."
+      ],
+      [
+        "Je t’apporte le document avec un café.",
+        "Mélanie",
+        "Le café est accepté. Le document reste obligatoire."
+      ]
+    ],
+    "after": [
+      [
+        "Mélanie",
+        "Bien reçu !"
+      ],
+      [
+        "Rachid",
+        "Le fichier ?"
+      ],
+      [
+        "Mélanie",
+        "Le mail qui dit « bien reçu ? »."
+      ]
+    ]
+  },
+  {
+    "id": "humour-muffin",
+    "level": 14,
+    "title": "La commission du dernier muffin",
+    "cast": "Chloé · Richard · Rizlene · Rachid · Lauriane",
+    "lines": [
+      [
+        "Chloé",
+        "J’ai gardé le dernier muffin pour Rachid."
+      ],
+      [
+        "Richard",
+        "Ça se décide sans consultation du personnel ?"
+      ],
+      [
+        "Rizlene",
+        "Moi je lui avais gardé une place à côté de moi."
+      ],
+      [
+        "Rachid",
+        "Je peux prendre les deux ?"
+      ],
+      [
+        "Lauriane",
+        "Tu peux surtout prendre ton dossier, il est resté à l’imprimante."
+      ],
+      [
+        "Chloé",
+        "Tu vois, il suffit qu’il sourie et tout le monde s’occupe de lui."
+      ],
+      [
+        "Lauriane",
+        "Je m’occupe surtout du passage devant mon bureau."
+      ]
+    ],
+    "choices": [
+      [
+        "Je propose de partager le muffin.",
+        "Chloé",
+        "Bonne réponse. J’en ai encore deux dans mon sac."
+      ],
+      [
+        "Richard, on fait un vote ?",
+        "Richard",
+        "Très bien. Qui est pour qu’on en rachète ?"
+      ],
+      [
+        "Lauriane, merci pour le dossier.",
+        "Lauriane",
+        "Tu peux me remercier en arrêtant de le perdre."
+      ]
+    ],
+    "after": [
+      [
+        "Rizlene",
+        "La place à côté de moi est toujours libre."
+      ],
+      [
+        "Richard",
+        "Je note que personne ne m’a proposé de muffin."
+      ]
+    ]
+  },
+  {
+    "id": "humour-budget",
+    "level": 16,
+    "title": "Un budget presque équilibré",
+    "cast": "Florian · Rachid · Yousra",
+    "lines": [
+      [
+        "Florian",
+        "Pourquoi cette ligne s’appelle « à peu près » ?"
+      ],
+      [
+        "Rachid",
+        "C’est une estimation prudente."
+      ],
+      [
+        "Yousra",
+        "Il a mis le même montant dans « divers », « autres » et « on verra ». "
+      ],
+      [
+        "Rachid",
+        "J’ai réparti les risques."
+      ],
+      [
+        "Florian",
+        "Tu as surtout réparti la même dépense."
+      ],
+      [
+        "Yousra",
+        "Il est créatif, c’est pour ça qu’on l’aime bien."
+      ],
+      [
+        "Florian",
+        "Gardons la créativité pour le titre du fichier."
+      ]
+    ],
+    "choices": [
+      [
+        "Je reprends chaque ligne.",
+        "Yousra",
+        "Viens, je t’aide. On garde « à peu près » pour l’heure du déjeuner."
+      ],
+      [
+        "Je renomme le fichier « définitif ».",
+        "Florian",
+        "Tu vas vexer les trois autres versions définitives."
+      ],
+      [
+        "Je supprime « on verra ».",
+        "Florian",
+        "Enfin une économie immédiatement visible."
+      ]
+    ],
+    "after": [
+      [
+        "Rachid",
+        "Et si j’appelle ça une marge ?"
+      ],
+      [
+        "Florian",
+        "Alors je te demanderai encore le détail, mais avec un sourcil levé."
+      ]
+    ]
+  },
+  {
+    "id": "humour-visio",
+    "level": 20,
+    "title": "Le fond d’écran de Dijon",
+    "cast": "Suzy · Rachid · Hervé · Sébastien",
+    "lines": [
+      [
+        "Suzy",
+        "Rachid, ton fond de visio, c’est le bureau d’Hervé ?"
+      ],
+      [
+        "Rachid",
+        "Je visualise mes objectifs."
+      ],
+      [
+        "Hervé",
+        "C’est ma photo de famille derrière toi ?"
+      ],
+      [
+        "Rachid",
+        "Je n’avais pas vu ce détail."
+      ],
+      [
+        "Suzy",
+        "Le fauteuil te va bien, mais je préfère quand tu restes toi-même."
+      ],
+      [
+        "Hervé",
+        "Et moi je préfère quand mon bureau reste mon bureau."
+      ],
+      [
+        "Sébastien",
+        "Je peux flouter la famille. Pas l’ambition."
+      ]
+    ],
+    "choices": [
+      [
+        "Je remets un fond neutre.",
+        "Suzy",
+        "Très bien. Ton sourire suffit largement."
+      ],
+      [
+        "C’était un test technique.",
+        "Hervé",
+        "Curieux, tu avais aussi changé le nom en « Direction générale »."
+      ],
+      [
+        "Seb, tu as un fond de salle de sport ?",
+        "Sébastien",
+        "Oui, mais Yan va te demander pourquoi tu es assis."
+      ]
+    ],
+    "after": [
+      [
+        "Hervé",
+        "Tu peux m’envoyer la photo ? Le bureau est mieux rangé que maintenant."
+      ]
+    ]
+  },
+  {
+    "id": "humour-com",
+    "level": 26,
+    "title": "La photo officielle",
+    "cast": "Athéna · Rachid · Virginie · Clémence",
+    "lines": [
+      [
+        "Athéna",
+        "Rachid, souris naturellement."
+      ],
+      [
+        "Rachid",
+        "Comme ça ?"
+      ],
+      [
+        "Athéna",
+        "On dirait que tu attends les résultats du budget."
+      ],
+      [
+        "Virginie",
+        "Fais comme quand Suzy appelle."
+      ],
+      [
+        "Rachid",
+        "Vous êtes tous au courant ?"
+      ],
+      [
+        "Clémence",
+        "Même le téléphone fixe est au courant."
+      ],
+      [
+        "Athéna",
+        "Voilà ! Là tu es charmant. Ne bouge plus."
+      ]
+    ],
+    "choices": [
+      [
+        "On peut faire une photo d’équipe ?",
+        "Athéna",
+        "Bonne idée. Ça évitera qu’on pense que tu travailles tout seul."
+      ],
+      [
+        "Je vais finir par couper la caméra.",
+        "Virginie",
+        "Tu nous priverais de ton expression quand on prononce Dijon."
+      ],
+      [
+        "Vous prenez combien de photos ?",
+        "Athéna",
+        "Autant que de versions de ton budget, apparemment."
+      ]
+    ],
+    "after": [
+      [
+        "Sébastien",
+        "J’ai cligné des yeux."
+      ],
+      [
+        "Athéna",
+        "Sur les vingt-trois photos ?"
+      ],
+      [
+        "Sébastien",
+        "Je suis régulier."
+      ]
+    ]
+  },
+  {
+    "id": "humour-agenda",
+    "level": 35,
+    "title": "Sirine trouve un créneau",
+    "cast": "Sirine · Rachid · Richard · Lauriane",
+    "lines": [
+      [
+        "Sirine",
+        "Rachid, tu as quinze minutes ?"
+      ],
+      [
+        "Rachid",
+        "Pour parler de quoi ?"
+      ],
+      [
+        "Sirine",
+        "Du temps que tu passes à demander de quoi on va parler."
+      ],
+      [
+        "Richard",
+        "Je peux bloquer un créneau."
+      ],
+      [
+        "Sirine",
+        "Il est là, Richard."
+      ],
+      [
+        "Richard",
+        "Oui, mais son agenda ne le sait pas."
+      ],
+      [
+        "Lauriane",
+        "Le mien dit déjà que cette réunion pouvait être un mail."
+      ]
+    ],
+    "choices": [
+      [
+        "Je prends des notes.",
+        "Sirine",
+        "Très bien. Première ligne : répondre à la question avant de préparer son discours."
+      ],
+      [
+        "On commence maintenant ?",
+        "Lauriane",
+        "Attention, tu vas mettre tout le monde en avance."
+      ],
+      [
+        "Richard, mets un rappel de fin.",
+        "Richard",
+        "Je vais même en mettre deux. Par expérience."
+      ]
+    ],
+    "after": [
+      [
+        "Sirine",
+        "Pour une fois, on va finir à l’heure."
+      ],
+      [
+        "Lauriane",
+        "Je note la date, c’est un événement."
+      ]
+    ]
+  },
+  {
+    "id": "humour-deplacement",
+    "level": 41,
+    "title": "Dijon, destination stratégique",
+    "cast": "Suzy · Rachid · Richard · Sébastien · Yan",
+    "lines": [
+      [
+        "Suzy",
+        "Alors, tu viens enfin nous voir à Dijon ?"
+      ],
+      [
+        "Rachid",
+        "J’ai rempli la demande de déplacement."
+      ],
+      [
+        "Richard",
+        "Motif : « échange de bonnes pratiques ». "
+      ],
+      [
+        "Sébastien",
+        "Il a mis une chemise pour un échange de pratiques."
+      ],
+      [
+        "Suzy",
+        "Et elle lui va très bien."
+      ],
+      [
+        "Yan",
+        "Il a surtout oublié son sac de sport."
+      ],
+      [
+        "Rachid",
+        "Je vais à Dijon, pas en stage commando."
+      ]
+    ],
+    "choices": [
+      [
+        "Je prends aussi le sac.",
+        "Yan",
+        "Bonne décision. Les compliments n’entraînent pas les jambes."
+      ],
+      [
+        "Suzy, tu connais un bon restaurant ?",
+        "Suzy",
+        "Oui. J’ai même prévu de t’accompagner pour vérifier la qualité."
+      ],
+      [
+        "Seb, tu peux arrêter de commenter ?",
+        "Sébastien",
+        "Je ne commente pas, je documente le déplacement."
+      ]
+    ],
+    "after": [
+      [
+        "Richard",
+        "J’ai validé la demande."
+      ],
+      [
+        "Rachid",
+        "Merci !"
+      ],
+      [
+        "Richard",
+        "Tu as mis la date du déjeuner dans la case « retour prévu »."
+      ]
+    ]
+  },
+  {
+    "id": "humour-fauteuil",
+    "level": 50,
+    "title": "Le fauteuil en démonstration",
+    "cast": "Hervé · Rachid · Lauriane · Sirine · Suzy · Richard",
+    "lines": [
+      [
+        "Hervé",
+        "Pourquoi tout le monde regarde ma chaise ?"
+      ],
+      [
+        "Rachid",
+        "On se demandait si elle était confortable."
+      ],
+      [
+        "Lauriane",
+        "Lui se demande ça depuis son premier jour."
+      ],
+      [
+        "Sirine",
+        "Je lui conseille déjà de savoir régler la hauteur de la sienne."
+      ],
+      [
+        "Suzy",
+        "Il a de l’ambition. Et une jolie façon de ne pas se décourager."
+      ],
+      [
+        "Hervé",
+        "Moi aussi j’avais de l’ambition en 1998."
+      ],
+      [
+        "Richard",
+        "La camionnette ou le fauteuil ?"
+      ],
+      [
+        "Hervé",
+        "Vous connaissez déjà celle de la camionnette ?"
+      ]
+    ],
+    "choices": [
+      [
+        "Pas celle du fauteuil.",
+        "Hervé",
+        "Alors asseyez-vous, elle est un peu longue."
+      ],
+      [
+        "On peut garder les deux histoires pour demain ?",
+        "Lauriane",
+        "Première bonne décision de ta future direction."
+      ],
+      [
+        "Je vais chercher une chaise pour Suzy.",
+        "Suzy",
+        "Tu vois, c’est pour ça que je l’apprécie."
+      ]
+    ],
+    "after": [
+      [
+        "Sirine",
+        "Et personne ne repart avec un fauteuil."
+      ],
+      [
+        "Rachid",
+        "Même en échange de bonnes pratiques ?"
+      ]
+    ]
+  }
+]);
         const safe = (v) =>
           String(v).replace(
             /[&<>"']/g,
@@ -17522,6 +18189,24 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           },
         ];
         const KEY = "ensio-rachid-campaign-v1";
+        // Recurring fictional scenes, keeping all episode IDs, choices and saves intact.
+        const suzyMoments = [
+          ["J’ai vu ta présentation depuis Dijon. Tu as du charisme, Rachid. Et ton sourire aide aussi, je vais pas mentir.","Je vais finir par rougir devant mon écran.","Ça te va bien aussi. Plus sérieusement, tu peux être fier de toi."],
+          ["Petit message de Dijon : tu sais que tu rends les réunions plus agréables ? Tu écoutes les gens, ça se voit.","Même à distance ?", "Même à distance. Mais je préfère quand tu viens nous voir."],
+          ["Je t’ai gardé une place au café de Dijon. Avec toi, même une réunion du lundi semble moins longue.","C’est le café ou ma conversation ?", "Les deux. Mais surtout ta conversation, ne prends pas trop la confiance."],
+          ["Tu as gagné en assurance, Rachid. Tu es toujours aussi attentionné, et je trouve ça très séduisant.","Merci Suzy, ça me fait vraiment plaisir.","C’était le but. À bientôt à Dijon, j’espère."],
+          ["Tout le monde parle du projet, moi je voulais surtout te dire bravo. Tu as une belle énergie, Rachid.","Ton message tombe au bon moment.","Alors je recommencerai. Les compliments mérités, ça se dit."],
+        ];
+        episodes.forEach((ep,index)=>{
+          if(index>=3 && (index-3)%12===0){
+            const moment=suzyMoments[Math.floor((index-3)/12)%suzyMoments.length];
+            ep.lines.push(["Suzy · Dijon",moment[0]],["Rachid",moment[1]],["Suzy · Dijon",moment[2]]);
+          }
+          if(index>0 && index%10===0){
+            const supporters=[...new Set(ep.lines.map(x=>x[0]))].filter(n=>["Rizlene","Chloé","Athéna","Virginie","Clémence","Mélanie","Yousra","Catherine","Amélie","Sylvie","Dalia"].includes(n));
+            if(supporters.length) ep.lines.push([supporters[0],index%20===0?"Tu sais, Rachid, j’aime vraiment passer du temps avec toi. Tu nous fais rire et tu prends soin de l’équipe.":"Je te taquine souvent, mais je t’apprécie beaucoup, Rachid. Ton enthousiasme fait du bien ici."],["Rachid","Merci. Ça compte pour moi de vous avoir à mes côtés."]);
+          }
+        });
         const modes = {
           method: {
             speaker: "Richard",
@@ -17717,7 +18402,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         const home = document.createElement("div");
         home.id = "ensioCampaignHome";
         home.className = "ensio-story";
-        document.querySelector("#dashboard .home-actions").after(home);
+        document.querySelector("#dashboard .hero").after(home);
         const questHint = document.createElement("div");
         questHint.className = "ensio-campaign-hint";
         document.getElementById("questModulesSeparate").before(questHint);
@@ -18285,7 +18970,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 c.name +
                   " · " +
                   (c.description || "Une conversation t’attend."),
-                "rpg",
+                "colleagues",
                 "meeting",
                 c.id,
               );
@@ -18379,7 +19064,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                   safe(x.body) +
                   '</p><button type="button" data-inbox-open="' +
                   safe(x.id) +
-                  '">Voir →</button></article>',
+                  '">Voir →</button>' + (x.read ? '' : ' <button type="button" data-inbox-mark="' + safe(x.id) + '">Marquer comme lu</button>') + '</article>',
               )
               .join("") ||
             "<p>Aucune nouveauté pour le moment. Tes prochains déblocages apparaîtront ici.</p>";
@@ -18435,6 +19120,13 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               items: state.items.map((x) => ({ ...x, read: true })),
             });
             render();
+            return;
+          }
+          const mark = e.target.closest("[data-inbox-mark]");
+          if (mark) {
+            persist({ ...state, items: state.items.map(x => x.id === mark.dataset.inboxMark ? {...x, read:true} : x) });
+            render();
+            layer.querySelector('[data-inbox-read-all]').focus();
             return;
           }
           const action = e.target.closest("[data-inbox-open]");
@@ -18522,6 +19214,179 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         };
         scan(false);
       })();
-    </script></body
+    </script><style id="ensio-modern">
+:root {--cyan:#8b9cff;--line:#30374d;color-scheme:dark}
+body {background:radial-gradient(ellipse at 70% 0%,#252741 0%,transparent 55%),#10121b;color:#edf0f8}
+.sidebar {background:#161923;border-color:#303448}
+.topbar {background:#151822;border-color:#303448}
+.panel,.rpg-panel,.system-console,.dungeon-card,.ensio-person,.ensio-profile,.hero,.v69-fold {background:#1b1f2d!important;border-color:#343b51!important;box-shadow:0 8px 28px #0002;border-radius:16px}
+.v69-fold>summary {background:#222738!important;color:#e8ecfa!important}
+.sidebar .tabs>.tab.active,.v69-subnav button[aria-current="page"] {background:#343758!important;color:#e4e5ff!important;border-color:#818cf8!important}
+.v69-subnav {gap:8px;flex-wrap:wrap}
+.v69-subnav button {border-radius:12px;min-height:44px}
+button:focus-visible {outline:3px solid #a5b4fc;outline-offset:3px}
+#systemRoot {display:none}
+#ensioPeople {border:0;box-shadow:none}
+#ensioPeople>summary {display:none}
+#colleagues .page-heading {margin-bottom:20px}
+.inbox-item button {min-height:44px;margin:4px}
+#ensioRewards {display:grid;gap:20px}
+@media(max-width:850px){body:not(.shinobi-mode) .sidebar .tabs {display:flex!important;overflow-x:auto;justify-content:space-around;gap:2px}body:not(.shinobi-mode) .sidebar .tabs>.tab:not(.legacy-route) {flex:1 0 65px!important;min-width:65px!important;padding:8px 3px!important}.mobile-tab-label {font-size:10px!important}.sidebar .tabs>.legacy-route {display:none!important}}
+</style><script id="ensio-ergonomie-v2">
+(()=>{
+
+function organize(){
+ const panels=[...document.querySelectorAll('#rpgRoot .rpg-panel')].filter(p=>/Succès|Plan des services/.test(p.querySelector('h3')?.textContent||''));
+ for(const p of panels){const wrap=p.parentElement.matches('details')?p.parentElement:p;wrap.remove()}
+ const roster=document.getElementById('ensioPeople');if(roster){document.getElementById('colleagues').append(roster);roster.open=true;}
+ document.getElementById('moduleRanksV61')?.remove();
+}
+document.addEventListener('ensio-rachid:panels',organize);
+document.addEventListener('ensio-rachid:changed',organize);
+document.addEventListener('click',e=>{if(e.target.closest('[data-ensio-open]'))window.rpgLifeNavigation.go('rpg')});
+organize();
+})();</script><script id="ensio-weekly-quests">
+(()=>{
+'use strict';
+const CONFIG='ensio-rachid-weekly-config-v1';
+const defaults=[
+{id:910001,module:'Santé',name:'Dormir 8 h pendant 4 nuits',target:4,xp:250},
+{id:910002,module:'Nutrition',name:'Manger équilibré pendant 5 jours',target:5,xp:250},
+{id:910003,module:'Sport',name:'Faire 3 séances de sport',target:3,xp:250},
+{id:910004,module:'Discipline',name:'Apprendre ou lire pendant 3 jours',target:3,xp:250}
+];
+let config=defaults.map(x=>({...x})),protectedConfig=false;
+try{const raw=appStorage.getItem(CONFIG);if(raw===null&&localStorage.getItem(CONFIG)!==null)protectedConfig=true;if(raw){const parsed=JSON.parse(raw);if(!Array.isArray(parsed)||parsed.length!==4)throw Error();config=defaults.map(d=>{const q=parsed.find(x=>x.id===d.id);if(!q||typeof q.name!=='string'||!q.name.trim()||!Number.isInteger(q.target)||q.target<1||q.target>21||!Number.isInteger(q.xp)||q.xp<0||q.xp>250)throw Error();return {...d,name:q.name,target:q.target,xp:q.xp}})}}catch{protectedConfig=true}
+const colors={Santé:'sante',Nutrition:'nutrition',Sport:'sport',Discipline:'discipline'};
+function week(date){const d=new Date(date+'T12:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function within(e,start){return e.weekly===true&&week(e.date)===start}
+function paint(){
+ const start=week(activeQuestDate()),end=new Date(start+'T12:00:00');end.setDate(end.getDate()+6);
+ document.getElementById('ensioWeekLabel').textContent='Du '+new Date(start+'T12:00:00').toLocaleDateString('fr-FR')+' au '+end.toLocaleDateString('fr-FR')+' · bonus distinct des XP quotidiens · jusqu’à 250 XP par domaine.';
+ document.getElementById('weeklyQuestModules').innerHTML=mods.map(m=>{const q=config.find(x=>x.module===m),all=entries.filter(e=>e.id===q.id&&within(e,start)),count=all.length,done=all.some(e=>e.weeklyComplete===true),goal=all[0]?.weeklyTarget||q.target,reward=all[0]?.weeklyReward??q.xp;return `<div class="panel quest-module accent-${colors[m]}" data-week-module="${esc(m)}"><h3>${icons[m]} ${esc(m.toUpperCase())} · ${fmt(total(all))}/250 XP</h3><div class="quest"><div class="questinfo"><div class="questname">${esc(all[0]?.weeklyName||q.name)}</div><div class="questmeta">Quête hebdomadaire · ${count}/${goal}</div></div><span class="xp">+${reward} XP</span><button type="button" class="action ${done?'done':''}" data-weekly-id="${q.id}">${done?'✓ Fait':'Valider'}</button>${count&&!done?`<button type="button" class="action done" data-weekly-undo="${q.id}" aria-label="Retirer une validation">↶</button>`:''}</div><div class="bar"><div class="fill" style="width:${Math.min(100,count/goal*100)}%"></div></div><p class="rpg-note">${done?'Objectif atteint · clique sur Fait pour annuler la dernière validation.':'Une validation par action accomplie · XP accordés à la fin de l’objectif.'}</p></div>`}).join('');
+}
+function editor(){document.getElementById('weeklyEditor').innerHTML=`<form id="weeklyForm"><p>Les réglages s’appliquent aux semaines sans validation. Un objectif déjà commencé garde son nom, sa cible et sa récompense.</p>${config.map(q=>`<fieldset><legend>${esc(q.module)}</legend><label>Quête <input name="name-${q.id}" required maxlength="100" value="${esc(q.name)}"></label><label>Objectif <input name="target-${q.id}" type="number" min="1" max="21" required value="${q.target}"></label><label>XP <input name="xp-${q.id}" type="number" min="0" max="250" step="1" required value="${q.xp}"></label></fieldset>`).join('')}<p id="weeklyError" role="status">${protectedConfig?'Réglages illisibles : exporte ta sauvegarde avant toute réparation.':''}</p><button type="submit" ${protectedConfig?'disabled':''}>Enregistrer les quêtes hebdomadaires</button></form>`}
+document.getElementById('weeklyEditToggle').addEventListener('click',()=>{const panel=document.getElementById('weeklyEditor');panel.classList.toggle('hidden');document.getElementById('weeklyEditToggle').setAttribute('aria-expanded',String(!panel.classList.contains('hidden')));if(!panel.classList.contains('hidden'))editor()});
+document.addEventListener('submit',e=>{if(e.target.id!=='weeklyForm')return;e.preventDefault();if(protectedConfig)return;const form=new FormData(e.target),next=config.map(q=>({...q,name:String(form.get('name-'+q.id)||'').trim(),target:Number(form.get('target-'+q.id)),xp:Number(form.get('xp-'+q.id))}));if(next.some(q=>!q.name||!Number.isInteger(q.target)||q.target<1||q.target>21||!Number.isInteger(q.xp)||q.xp<0||q.xp>250))return;try{appStorage.commit({[CONFIG]:JSON.stringify(next)});config=next;document.getElementById('weeklyEditor').classList.add('hidden');document.getElementById('weeklyEditToggle').setAttribute('aria-expanded','false');paint()}catch(err){document.getElementById('weeklyError').textContent='Enregistrement impossible : '+err.message}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-weekly-id],[data-weekly-undo]');if(!b)return;const q=config.find(x=>x.id===Number(b.dataset.weeklyId||b.dataset.weeklyUndo));if(!q)return;const start=week(activeQuestDate()),all=entries.filter(x=>x.id===q.id&&within(x,start)),goal=all[0]?.weeklyTarget||q.target,reward=all[0]?.weeklyReward??q.xp,name=all[0]?.weeklyName||q.name,done=all.some(x=>x.weeklyComplete),undo=b.hasAttribute('data-weekly-undo')||done;let next;
+if(undo){if(!all.length)return;next=entries.filter(x=>x.uid!==all.at(-1).uid)}else{const complete=all.length+1>=goal;next=[...entries,{uid:Date.now()+'-w-'+Math.random().toString(36).slice(2),ts:Date.now(),date:activeQuestDate(),id:q.id,module:q.module,name:name+' · hebdomadaire',xp:complete?reward:0,weekly:true,weeklyComplete:complete,weeklyTarget:goal,weeklyReward:reward,weeklyName:name}]}
+try{appStorage.commit({[KEY]:JSON.stringify(next)});entries=next;if(!undo&&next.at(-1).xp>0)animateXP(b,next.at(-1).xp);render()}catch(err){alert('Validation non enregistrée : '+err.message)}});
+document.addEventListener('ensio-rachid:changed',paint);
+paint();
+})();</script><style>
+#weeklyEditor {padding:20px;margin-bottom:20px}#weeklyEditor fieldset {display:flex;flex-wrap:wrap;gap:14px;margin:12px 0;border:1px solid #343b51;border-radius:12px;padding:14px}#weeklyEditor label {display:flex;flex-direction:column;gap:7px;flex:1;min-width:120px}#weeklyEditor input {width:100%;padding:10px;background:#151822;color:#edf0f8;border:1px solid #49516d;border-radius:8px}#weeklyEditor button {padding:12px;border-radius:10px}#weeklyQuestModules .bar {margin-top:12px}#weeklyQuestModules .quest-module>h3{font-size:16px}
+</style><style id="ensio-training-ergonomics">
+.training-nav{display:flex;flex-wrap:wrap;gap:8px}.training-nav button{min-height:44px}
+#trainingRoot .sport-grid {gap:16px}#trainingRoot .sport-card{border-radius:16px}
+.training-modal{max-width:760px;width:calc(100% - 24px);max-height:90dvh;padding:24px;background:#1b1f2d;color:#edf0f8;border:1px solid #49516d;border-radius:18px;overflow:auto}.training-modal::backdrop{background:#080b13c9}.training-modal header{display:flex;justify-content:space-between;align-items:center;gap:12px}.training-modal button{min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid #556181;background:#303951;color:#fff}.training-modal label{display:flex;flex-direction:column;gap:7px;margin:12px 0}.training-modal input,.training-modal select,#ensioLibraryMount input,#ensioLibraryMount select{padding:12px;border:1px solid #49516d;background:#111722;color:#f0f3ff;border-radius:9px;min-width:0;width:100%}.training-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.training-draft-row{padding:16px;border:1px solid #49516d;border-radius:12px;margin:12px 0}.training-draft-row h3{margin-top:0}.training-library-filters{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin:16px 0}.training-modal .sport-actions{display:flex;flex-wrap:wrap;gap:10px}.training-tag{font-size:12px;color:#bbc8ef}.training-library-card[hidden]{display:none!important}
+@media(max-width:550px){.training-form-grid,.training-library-filters{grid-template-columns:1fr}.training-modal{padding:16px}.training-nav{gap:5px}.training-nav button{flex:1 0 28%;padding:10px 5px;font-size:12px}}
+</style><script id="ensio-training-ergonomics-script">
+(()=>{
+'use strict';
+const catalog=[["Développé couché", "Pectoraux", "weight"], ["Développé couché haltères", "Pectoraux", "weight"], ["Développé incliné", "Pectoraux", "weight"], ["Développé incliné haltères", "Pectoraux", "weight"], ["Développé décliné", "Pectoraux", "weight"], ["Chest press", "Pectoraux", "weight"], ["Pec deck", "Pectoraux", "weight"], ["Écartés haltères", "Pectoraux", "weight"], ["Écartés poulie", "Pectoraux", "weight"], ["Écartés poulie basse", "Pectoraux", "weight"], ["Pompes", "Pectoraux", "bodyweight"], ["Pompes inclinées", "Pectoraux", "bodyweight"], ["Pompes déclinées", "Pectoraux", "bodyweight"], ["Pull-over haltère", "Pectoraux", "weight"], ["Tractions", "Dos", "bodyweight"], ["Tractions supination", "Dos", "bodyweight"], ["Tractions prise neutre", "Dos", "bodyweight"], ["Tractions assistées", "Dos", "bodyweight"], ["Tirage vertical", "Dos", "weight"], ["Tirage vertical prise serrée", "Dos", "weight"], ["Tirage horizontal poulie", "Dos", "weight"], ["Rowing", "Dos", "weight"], ["Rowing haltère unilatéral", "Dos", "weight"], ["Rowing barre en T", "Dos", "weight"], ["Rowing machine", "Dos", "weight"], ["Rowing poitrine appuyée", "Dos", "weight"], ["Tirage bras tendus", "Dos", "weight"], ["Pull-over poulie", "Dos", "weight"], ["Soulevé de terre", "Dos", "weight"], ["Extensions lombaires", "Dos", "bodyweight"], ["Développé épaules", "Épaules", "weight"], ["Développé militaire barre", "Épaules", "weight"], ["Développé épaules haltères", "Épaules", "weight"], ["Développé Arnold", "Épaules", "weight"], ["Développé épaules machine", "Épaules", "weight"], ["Élévations latérales", "Épaules", "weight"], ["Élévations latérales poulie", "Épaules", "weight"], ["Élévations latérales machine", "Épaules", "weight"], ["Élévations frontales", "Épaules", "weight"], ["Oiseau haltères", "Épaules", "weight"], ["Oiseau machine", "Épaules", "weight"], ["Face pull", "Épaules", "weight"], ["Tirage menton", "Épaules", "weight"], ["Shrugs", "Épaules", "weight"], ["Curl biceps", "Biceps", "weight"], ["Curl barre EZ", "Biceps", "weight"], ["Curl barre droite", "Biceps", "weight"], ["Curl haltères alterné", "Biceps", "weight"], ["Curl incliné", "Biceps", "weight"], ["Curl marteau", "Biceps", "weight"], ["Curl pupitre", "Biceps", "weight"], ["Curl concentré", "Biceps", "weight"], ["Curl poulie basse", "Biceps", "weight"], ["Curl corde", "Biceps", "weight"], ["Curl inversé", "Biceps", "weight"], ["Curl araignée", "Biceps", "weight"], ["Extension triceps", "Triceps", "weight"], ["Dips", "Triceps", "bodyweight"], ["Dips assistés", "Triceps", "bodyweight"], ["Développé couché prise serrée", "Triceps", "weight"], ["Barre au front", "Triceps", "weight"], ["Extension triceps corde", "Triceps", "weight"], ["Extension triceps au-dessus de la tête", "Triceps", "weight"], ["Extension triceps haltère", "Triceps", "weight"], ["Kickback triceps", "Triceps", "weight"], ["Pompes diamant", "Triceps", "bodyweight"], ["Squat", "Jambes", "weight"], ["Squat avant", "Jambes", "weight"], ["Hack Squat", "Jambes", "weight"], ["Goblet squat", "Jambes", "weight"], ["Squat au poids du corps", "Jambes", "bodyweight"], ["Presse à cuisses", "Jambes", "weight"], ["Presse à cuisses unilatérale", "Jambes", "weight"], ["Fentes", "Jambes", "weight"], ["Fentes marchées", "Jambes", "weight"], ["Fentes arrière", "Jambes", "weight"], ["Squat bulgare", "Jambes", "weight"], ["Montées sur banc", "Jambes", "weight"], ["Leg extension", "Jambes", "weight"], ["Leg curl", "Jambes", "weight"], ["Leg curl assis", "Jambes", "weight"], ["Leg curl debout", "Jambes", "weight"], ["Soulevé de terre roumain", "Jambes", "weight"], ["Soulevé de terre jambes tendues", "Jambes", "weight"], ["Hip thrust", "Jambes", "weight"], ["Pont fessier", "Jambes", "bodyweight"], ["Abducteurs machine", "Jambes", "weight"], ["Adducteurs machine", "Jambes", "weight"], ["Mollets", "Jambes", "weight"], ["Mollets assis", "Jambes", "weight"], ["Crunch", "Abdominaux", "bodyweight"], ["Crunch poulie", "Abdominaux", "weight"], ["Crunch machine", "Abdominaux", "weight"], ["Crunch inversé", "Abdominaux", "bodyweight"], ["Relevés de jambes suspendu", "Abdominaux", "bodyweight"], ["Relevés de genoux suspendu", "Abdominaux", "bodyweight"], ["Gainage", "Abdominaux", "bodyweight"], ["Gainage latéral", "Abdominaux", "bodyweight"], ["Roue abdominale", "Abdominaux", "bodyweight"], ["Russian twist", "Abdominaux", "bodyweight"]];
+const groups=['Autre','Pectoraux','Dos','Épaules','Biceps','Triceps','Jambes','Abdominaux'];
+sport.exerciseMeta=sport.exerciseMeta||{};
+for(const [name,group,mode]of (sport.libraryCatalogV3?[]:catalog)){if(!sport.library.some(x=>x.toLowerCase()===name.toLowerCase()))sport.library.push(name);if(!sport.exerciseMeta[name])sport.exerciseMeta[name]={group,mode:mode||'weight'};}
+sport.libraryCatalogV3=true;
+function persist(){appStorage.commit({[SPORT_KEY]:JSON.stringify(sport)});}
+try{persist()}catch{}
+const modal=document.createElement('dialog');modal.className='training-modal';document.body.append(modal);
+let draft=null,returnTo=null,previousFocus=null;
+const clean=ex=>({...ex,sets:ex.sets.map(set=>({...set,done:false}))});
+function close(){modal.close();draft=null;returnTo=null;previousFocus?.focus?.()}
+function open(title,body){if(!modal.open)previousFocus=document.activeElement;modal.innerHTML=`<header><h2>${sportEsc(title)}</h2><button type="button" data-training="close" aria-label="Fermer">✕</button></header>${body}<p id="trainingFormError" role="status"></p>`;if(!modal.open)modal.showModal();modal.querySelector('input,select,button')?.focus()}
+function fail(message){modal.querySelector('#trainingFormError').textContent=message}
+function save(){persist();sportRender()}
+let librarySelected='',libraryGroup='';
+function options(selected='',filter=''){
+ const names=[...new Set([...sport.library,...(selected&&!sport.library.includes(selected)?[selected]:[])])].filter(n=>!filter||(sport.exerciseMeta[n]?.group||'Autre')===filter);
+ return '<option value="">Choisir un exercice…</option>'+groups.filter(g=>!filter||g===filter).map(g=>{const items=names.filter(n=>(sport.exerciseMeta[n]?.group||'Autre')===g);return items.length?`<optgroup label="${sportEsc(g)}">${items.map(n=>`<option value="${sportEsc(n)}" ${n===selected?'selected':''}>${sportEsc(n)}</option>`).join('')}</optgroup>`:''}).join('');
+}
+function libraryRender(){const mount=document.getElementById('ensioLibraryMount');if(!mount)return;const name=librarySelected,meta=sport.exerciseMeta[name]||{};mount.innerHTML=`<h2>📚 Bibliothèque d’exercices</h2><p>100 exercices courants, classés par groupe musculaire. Tes exercices personnalisés restent disponibles.</p><div class="training-library-filters"><label>Groupe musculaire<select id="trainingGroup"><option value="">Tous les groupes</option>${groups.map(g=>`<option ${g===libraryGroup?'selected':''}>${sportEsc(g)}</option>`).join('')}</select></label><label>Exercice<select id="trainingLibrarySelect">${options(name,libraryGroup)}</select></label></div>${name?`<article class="sport-card"><h3>${sportEsc(name)}</h3><span class="training-tag">${sportEsc(meta.group||'Autre')} · ${meta.mode==='bodyweight'?'Poids du corps · lest facultatif':'Charge en kg'}</span><p>${sportEsc(sportLast(name))}</p><div class="sport-actions">${sport.active?`<button data-training="library-use" data-name="${sportEsc(name)}">+ Ajouter à la séance</button>`:''}<button data-training="library-edit" data-name="${sportEsc(name)}">Modifier</button><button data-training="library-remove" data-name="${sportEsc(name)}">Retirer de ma bibliothèque</button></div></article>`:''}<div class="sport-actions"><button data-training="library-add">+ Exercice personnalisé</button></div>`}
+const previous=sportRender;sportRender=function(...args){const result=previous(...args);libraryRender();return result};
+function programForm(p){draft=p?JSON.parse(JSON.stringify(p)):{id:sportId(),name:'Mon programme',exercises:[]};showDraft()}
+function showDraft(){open('Programme enregistré',`<label>Nom du programme<input id="trainingProgramName" maxlength="80" value="${sportEsc(draft.name)}"></label><div>${draft.exercises.map((ex,i)=>`<article class="training-draft-row"><h3>${sportEsc(ex.name)}</h3><p>${ex.sets.length} séries · ${ex.sets[0]?.reps||0} répétitions · ${sportIsBodyweight(ex)?'Poids du corps, lest':'Charge'} ${ex.sets[0]?.kg||0} kg</p><div class="sport-actions"><button data-training="draft-edit" data-index="${i}">Modifier</button><button data-training="draft-remove" data-index="${i}">Retirer</button><button data-training="draft-up" data-index="${i}" ${i===0?'disabled':''}>↑ Monter</button></div></article>`).join('')||'<p>Ajoute les exercices de ton programme.</p>'}</div><div class="sport-actions"><button data-training="draft-add">+ Ajouter un exercice</button><button class="primary" data-training="draft-save">Enregistrer le programme</button><button data-training="close">Annuler</button></div>`)}
+function keepDraftName(){if(draft)draft.name=document.getElementById('trainingProgramName')?.value.trim()||draft.name}
+function exerciseForm(target,index=null,name=''){
+ const ex=target==='draft'?draft.exercises[index]:target==='active'?sport.active?.exercises[index]:null;
+ name=ex?.name||name;
+ const meta=sport.exerciseMeta[name]||{},mode=ex?(sportIsBodyweight(ex)?'bodyweight':'weight'):(meta.mode||'weight');
+ returnTo={target,index,oldName:target==='library'?name:null};
+ open(target==='library'?'Exercice de la bibliothèque':'Choisir un exercice',`<form id="trainingExerciseForm"><label>Exercice${target==='library'?`<input name="name" id="trainingExerciseName" maxlength="80" required value="${sportEsc(name)}" placeholder="Nom de l’exercice personnalisé">`:`<select name="name" id="trainingExerciseName" required>${options(name)}</select>`}</label><div class="training-form-grid"><label>Groupe musculaire<select name="group">${groups.map(g=>`<option ${g===(meta.group||'Autre')?'selected':''}>${sportEsc(g)}</option>`).join('')}</select></label><label>Mode<select name="mode" id="trainingExerciseMode"><option value="weight" ${mode==='weight'?'selected':''}>Charge en kg</option><option value="bodyweight" ${mode==='bodyweight'?'selected':''}>Poids du corps</option></select></label>${target==='library'?'':`<label>Séries<input name="sets" type="number" required min="1" max="12" value="${ex?.sets.length||3}"></label><label>Répétitions<input name="reps" type="number" required min="1" max="300" value="${ex?.sets[0]?.reps||8}"></label><label><span id="trainingWeightLabel">${mode==='bodyweight'?'Lest facultatif (kg)':'Charge (kg)'}</span><input name="kg" type="number" required min="0" max="1000" step="0.5" value="${ex?.sets[0]?.kg||0}"></label>`}</div><p>Poids du corps : laisse le lest à 0 si tu n’ajoutes pas de charge.</p><div class="sport-actions"><button type="submit">${index===null?'Ajouter':'Enregistrer'}</button><button type="button" data-training="${target==='draft'?'draft-back':'close'}">Annuler</button></div></form>`)
+}
+
+document.addEventListener('change',e=>{if(e.target.id==='trainingGroup'){libraryGroup=e.target.value;librarySelected='';libraryRender()}if(e.target.id==='trainingLibrarySelect'){librarySelected=e.target.value;libraryRender()}if(e.target.id==='trainingExerciseMode'){const el=document.getElementById('trainingWeightLabel');if(el)el.textContent=e.target.value==='bodyweight'?'Lest facultatif (kg)':'Charge (kg)'}if(e.target.id==='trainingExerciseName'){const meta=sport.exerciseMeta[e.target.value];if(meta){const form=e.target.form;form.elements.group.value=meta.group;form.elements.mode.value=meta.mode;const el=document.getElementById('trainingWeightLabel');if(el)el.textContent=meta.mode==='bodyweight'?'Lest facultatif (kg)':'Charge (kg)'}}});
+document.addEventListener('submit',e=>{
+ if(e.target.id==='trainingFreeForm'){e.preventDefault();const f=new FormData(e.target),date=String(f.get('date')),name=String(f.get('name')).trim();if(!name||!sportIsoValid(date))return fail('Indique un nom et une date valide.');if(sport.active&&!confirm('Remplacer la séance en cours ?'))return;const before=JSON.stringify(sport);try{sport.active={id:sportId(),name,type:'Musculation',date,exercises:[]};persist();sportEntryDate=date;sportPage='home';sportSportChoice='Musculation';close();sportRender()}catch(err){sport=JSON.parse(before);fail('Séance non enregistrée : '+err.message)}return}
+ if(e.target.id!=='trainingExerciseForm')return;e.preventDefault();const f=new FormData(e.target),name=String(f.get('name')||'').trim(),mode=String(f.get('mode')),group=String(f.get('group'));if(!name)return;const {target,index,oldName}=returnTo,before=JSON.stringify(sport);let ex;
+ if(target!=='library'){const n=Number(f.get('sets')),reps=Number(f.get('reps')),kg=Number(f.get('kg'));if(!Number.isInteger(n)||n<1||n>12||!Number.isInteger(reps)||reps<1||reps>300||!Number.isFinite(kg)||kg<0||kg>1000)return fail('Vérifie les séries, répétitions et charges.');const prior=target==='draft'?draft.exercises[index]:sport.active?.exercises[index];ex={name,mode,sets:Array.from({length:n},(_,i)=>({kg,reps,done:prior?.sets[i]?.done||false}))}}
+ try{if(target==='draft'){if(index===null)draft.exercises.push(ex);else draft.exercises[index]=ex;showDraft();return}if(target==='active'){if(!sport.active)return;if(index===null)sport.active.exercises.push(ex);else sport.active.exercises[index]=ex;sportOpenExercise=index===null?sport.active.exercises.length-1:index;}else{if(oldName&&oldName!==name){if(sport.library.some(n=>n.toLowerCase()===name.toLowerCase()))return fail('Un exercice porte déjà ce nom.');sport.library=sport.library.filter(n=>n!==oldName);delete sport.exerciseMeta[oldName]}}
+ if(!sport.library.some(n=>n.toLowerCase()===name.toLowerCase()))sport.library.push(name);sport.exerciseMeta[name]={group,mode};persist();close();sportRender()
+ }catch(err){sport=JSON.parse(before);fail('Modification non enregistrée : '+err.message)}
+});
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-training]'),legacy=e.target.closest('[data-sport]');
+ const intercepted=['newProgram','edit','addLibrary','addActiveEx','renameActive'];
+ if(!b&&(!legacy||!intercepted.includes(legacy.dataset.sport)))return;
+ e.preventDefault();e.stopImmediatePropagation();
+ if(legacy&&!b){const op=legacy.dataset.sport;if(op==='newProgram')return programForm();if(op==='edit'){const p=sport.programs.find(x=>x.id===legacy.dataset.id);if(p&&p.id!==SPORT_LOCKED_ID)programForm(p);return}if(op==='addLibrary')return exerciseForm('library');if(op==='addActiveEx')return exerciseForm('active');if(op==='renameActive')return exerciseForm('active',Number(legacy.dataset.index));}
+ const op=b.dataset.training,i=Number(b.dataset.index);
+ if(op==='close')return close();
+ if(op==='free')return open('Nouvelle séance libre',`<form id="trainingFreeForm"><label>Nom de la séance<input name="name" maxlength="80" required value="Séance libre"></label><label>Date<input name="date" type="date" required max="${today()}" value="${sportChosenDate()}"></label><p>Cette séance sera ajoutée à ton historique. Tu pourras choisir de l’enregistrer comme programme.</p><button type="submit">Commencer la séance</button></form>`);
+ if(op==='draft-add'){keepDraftName();return exerciseForm('draft')}
+ if(op==='draft-edit'){keepDraftName();return exerciseForm('draft',i)}
+ if(op==='draft-back')return showDraft();
+ if(op==='draft-remove'){keepDraftName();draft.exercises.splice(i,1);return showDraft()}
+ if(op==='draft-up'){keepDraftName();if(i>0)[draft.exercises[i-1],draft.exercises[i]]=[draft.exercises[i],draft.exercises[i-1]];return showDraft()}
+ if(op==='draft-save'){keepDraftName();if(!draft.name.trim()||!draft.exercises.length)return fail('Indique un nom et ajoute au moins un exercice.');const before=JSON.stringify(sport);try{const index=sport.programs.findIndex(p=>p.id===draft.id),p={...draft,exercises:draft.exercises.map(clean)};if(index<0)sport.programs.push(p);else if(p.id!==SPORT_LOCKED_ID)sport.programs[index]=p;for(const ex of p.exercises){if(!sport.library.includes(ex.name))sport.library.push(ex.name);sport.exerciseMeta[ex.name]=sport.exerciseMeta[ex.name]||{group:'Autre',mode:ex.mode||'weight'}}persist();sportPage='programs';close();sportRender()}catch(err){sport=JSON.parse(before);fail('Programme non enregistré : '+err.message)}return}
+ if(op==='library-add')return exerciseForm('library');
+ if(op==='library-edit')return exerciseForm('library',null,b.dataset.name);
+ if(op==='library-use')return exerciseForm('active',null,b.dataset.name);
+ if(op==='library-remove'&&confirm('Retirer cet exercice de la bibliothèque ? Les programmes et séances restent conservés.')){const before=JSON.stringify(sport);try{sport.library=sport.library.filter(n=>n!==b.dataset.name);librarySelected='';persist();sportRender()}catch(err){sport=JSON.parse(before);alert('Suppression non enregistrée : '+err.message)}}
+},true);
+modal.addEventListener('cancel',e=>{e.preventDefault();close()});
+libraryRender();
+})();</script><style id="ensio-section-navigation">
+.ensio-section-nav{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 24px}.ensio-section-nav button{min-height:46px;padding:12px 18px;border:1px solid #49516d;background:#1b1f2d;color:#e8ecfa;border-radius:12px;font:inherit}.ensio-section-nav button[aria-pressed="true"]{background:#343758;border-color:#818cf8;color:#fff;font-weight:700}
+#ensioProfileTop,#rpgRoot,#ensioTower,#rpgBosses,#ensioCareerLegacy{display:none!important}
+#ensioFreeConversations>#ensioInteractions>summary{display:none}#ensioFreeConversations>#ensioInteractions{margin-top:20px}#ensioConversationPortrait[hidden],[data-career-panel][hidden],[data-quests-panel][hidden]{display:none!important}
+#ensioEncounter [data-ensio-route="dungeons"]{display:none!important}
+</style><script id="ensio-section-navigation-script">
+(()=>{
+'use strict';
+const quests=document.getElementById('quests'),top=quests.querySelector(':scope>.row');
+top.querySelector('h2').textContent='⚔ QUÊTES';
+const daily=document.createElement('div'),weekly=document.createElement('div');daily.dataset.questsPanel='daily';weekly.dataset.questsPanel='weekly';
+const weeklyHeader=document.getElementById('weeklyEditor').previousElementSibling;
+weekly.append(weeklyHeader,document.getElementById('weeklyEditor'),document.getElementById('weeklyQuestModules'));
+for(const node of [...quests.children])if(node!==top)daily.append(node);
+const questNav=document.createElement('nav');questNav.className='ensio-section-nav';questNav.setAttribute('aria-label','Fréquence des quêtes');questNav.innerHTML='<button type="button" data-quests-view="daily" aria-pressed="true">Quotidiennes</button><button type="button" data-quests-view="weekly" aria-pressed="false">Hebdomadaires</button>';
+quests.append(questNav,daily,weekly);weekly.hidden=true;
+function questView(view){daily.hidden=view!=='daily';weekly.hidden=view!=='weekly';document.getElementById('todayCount').hidden=view!=='daily';questNav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.questsView===view)))}
+const career=document.getElementById('rpg'),heading=career.querySelector('.page-heading');
+heading.querySelector('h2').textContent='📖 HISTOIRE';
+const description=heading.querySelector('p');if(description)description.textContent='L’histoire de Rachid et les conversations débloquées au fil de ta progression.';
+const nav=document.createElement('nav');nav.className='ensio-section-nav';nav.setAttribute('aria-label','Rubriques de l’histoire');nav.innerHTML='<button type="button" data-career-view="main" aria-pressed="true">Histoire principale</button><button type="button" data-career-view="free" aria-pressed="false">Conversations libres</button>';
+const main=document.createElement('div');main.id='ensioMainStory';main.dataset.careerPanel='main';
+const intro=document.createElement('p');intro.className='rpg-note';intro.textContent='Un prologue et 200 épisodes à débloquer dans l’ordre. Les conversations libres sont indépendantes de cette progression.';
+main.append(intro,document.getElementById('ensioCampaign'));
+const free=document.createElement('div');free.id='ensioFreeConversations';free.dataset.careerPanel='free';free.hidden=true;
+const freeIntro=document.createElement('p');freeIntro.className='rpg-note';freeIntro.textContent='Des échanges indépendants, accessibles selon ton niveau. Ils ne valident aucun épisode de l’histoire principale.';
+const interactions=document.getElementById('ensioInteractions');interactions.open=true;
+const portrait=document.createElement('div');portrait.id='ensioConversationPortrait';portrait.hidden=true;
+const encounter=document.getElementById('ensioEncounter'),oldFold=encounter.parentElement;portrait.append(encounter);
+free.append(freeIntro,portrait,interactions);oldFold.id='ensioCareerLegacy';oldFold.hidden=true;
+heading.after(nav,main,free);
+document.querySelectorAll('[data-v69-combat]').forEach(b=>b.remove());
+function storyView(view){main.hidden=view!=='main';free.hidden=view!=='free';nav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.careerView===view)))}
+document.addEventListener('click',e=>{
+ const q=e.target.closest('[data-quests-view]');if(q)questView(q.dataset.questsView);
+ const c=e.target.closest('[data-career-view]');if(c)storyView(c.dataset.careerView);
+ if(e.target.closest('[data-campaign-open],[data-campaign-prev],[data-campaign-next]'))storyView('main');
+ if(e.target.closest('[data-ensio-scene],[data-scene-prev],[data-scene-next]'))storyView('free');
+ if(e.target.closest('[data-ensio-open]')){storyView('free');portrait.hidden=false;}
+});
+window.ensioStoryNavigation={show:storyView};
+})();</script></body
   ></html
 >
