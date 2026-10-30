@@ -6869,7 +6869,7 @@
         ><nav class="tabs"
           ><button class="tab active" data-tab="dashboard">🏠 Accueil</button
           ><button class="tab" data-tab="quests">⚔️ Quêtes</button
-          ><button class="tab" data-tab="colleagues">👥 Collègues</button><button class="tab" data-tab="rpg">🏢 Carrière</button
+          ><button class="tab legacy-route" hidden aria-hidden="true" tabindex="-1" data-tab="colleagues">👥 Collègues</button><button class="tab" data-tab="rpg">🏢 Carrière</button
           ><button
             class="tab legacy-route"
             hidden
@@ -7169,7 +7169,7 @@
       ><div class="symbol" id="toastSymbol">✦</div
       ><h2 id="toastTitle">NIVEAU SUPÉRIEUR</h2><p id="toastText"></p
       ><button id="toastClose">Continuer l’aventure</button></div
-    ><script data-module="legacy-domain">
+    ><script data-module="legacy-domain" type="text/plain" data-ensio-deferred>
       const DATA = {
         quests: [
           {
@@ -10333,7 +10333,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
       // Les sauvegardes transportent désormais la personnalisation des quêtes.
       render();
     </script>
-    <script>
+    <script type="text/plain" data-ensio-deferred>
       /* RPG extension — all player-specific data stays in this browser */
       (function () {
         "use strict";
@@ -10580,7 +10580,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         <div class="welcome-note">Santé · Nutrition · Sport · Discipline</div>
       </div>
     </div>
-    <script>
+    <script type="text/plain" data-ensio-deferred>
       (function () {
         const key = "ensio-rachid-welcome-seen-v1";
         const screen = document.getElementById("welcomeScreen");
@@ -10739,7 +10739,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         }
       }
     </style>
-    <script>
+    <script type="text/plain" data-ensio-deferred>
       /* Extension non destructive : conserve les XP, les quêtes et les sauvegardes V5. */
       (() => {
         "use strict";
@@ -11065,7 +11065,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         render();
       })();
     </script>
-    <script id="v68-finalize">
+    <script id="v68-finalize" type="text/plain" data-ensio-deferred>
       // V6.8: explicit refresh after the final render chain has settled.
       const renderV68Previous = render;
       render = function () {
@@ -11074,16 +11074,15 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
       };
       document.getElementById("backup").onclick = exportAdventure;
       document.getElementById("file").onchange = () =>
-        restoreAdventure(document.getElementById("file"));</script
-    ><script id="v69-organization">
+        restoreAdventure(document.getElementById("file"));</script><script id="v69-organization" type="text/plain" data-ensio-deferred>
       /* V6.9 — Five destinations per universe; existing controls and storage stay authoritative. */
       (() => {
         "use strict";
         const groups = {
-            rpg: ["rpg", "dungeons", "titles"],
+            rpg: ["rpg", "colleagues", "dungeons", "titles"],
             analytics: ["analytics", "history"],
           },
-          parent = { dungeons: "rpg", titles: "rpg", history: "analytics" };
+          parent = { colleagues: "rpg", dungeons: "rpg", titles: "rpg", history: "analytics" };
         const labels = {
           dashboard: "TABLEAU DE BORD",
           quests: "QUÊTES",
@@ -11127,6 +11126,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
                 group === "rpg"
                   ? [
                       ["rpg", "📖 Histoire"],
+                      ["colleagues", "👥 Collègues"],
                       ["dungeons", "🏗️ Défis"],
                       ["titles", "♛ Titres"],
                     ]
@@ -11236,8 +11236,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         refresh();
         updateRoute("dashboard");
         window.rpgLifeNavigation = { go, getRoute: () => route };
-      })();</script
-    ><script id="ergonomie-ui">
+      })();</script><script id="ergonomie-ui" type="text/plain" data-ensio-deferred>
       /* Ergonomic presentation only: the existing quest, training and storage models remain authoritative. */
       (() => {
         "use strict";
@@ -11421,8 +11420,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         }
         window.rpgLifeErgonomics = { sport: sportUI };
         sportUI(document.getElementById("trainingRoot"));
-      })();</script
-    ><script id="mobile-navigation">
+      })();</script><script id="mobile-navigation" type="text/plain" data-ensio-deferred>
       (() => {
         "use strict";
         const paths = {
@@ -11469,8 +11467,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               window.scrollTo({ top: 0, behavior: "instant" }),
             );
         });
-      })();</script
-    ><script id="ensio-career">
+      })();</script><script id="ensio-career" type="text/plain" data-ensio-deferred>
       /* Narrative career layer. XP tables, quest scoring and training logic stay authoritative. */
       (() => {
         "use strict";
@@ -12293,8 +12290,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           title: titleNow,
           isPresident: president,
         };
-      })();</script
-    ><script id="ensio-interactions">
+      })();</script><script id="ensio-interactions" type="text/plain" data-ensio-deferred>
       /* Fictional office comedy. Choices change dialogue only, never XP or unlock rules. */
       (() => {
         "use strict";
@@ -13889,8 +13885,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           scenes: scenes.map((s) => ({ id: s.id, level: s.level })),
           refresh: render,
         };
-      })();</script
-    ><script id="ensio-campaign">
+      })();</script><script id="ensio-campaign" type="text/plain" data-ensio-deferred>
       /* A finite, authored campaign. Narrative score reads existing counters; awards no XP. */
       (() => {
         "use strict";
@@ -18810,8 +18805,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
           getState: () => JSON.parse(JSON.stringify(state)),
         };
         render();
-      })();</script
-    ><script id="ensio-quest-feedback">
+      })();</script><script id="ensio-quest-feedback" type="text/plain" data-ensio-deferred>
       (() => {
         const el = document.createElement("div");
         el.id = "ensioQuestReward";
@@ -18863,8 +18857,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
               setTimeout(() => spark.remove(), 700);
             }
         };
-      })();</script
-    ><script id="ensio-career-layout">
+      })();</script><script id="ensio-career-layout" type="text/plain" data-ensio-deferred>
       (() => {
         const campaign = document.getElementById("ensioCampaign");
         const slot = document.createElement("div");
@@ -18883,8 +18876,7 @@ ${crown ? `<path d="M112 53L122 17 146 42 160 8 174 42 198 17 208 53" fill="${me
         }
         document.addEventListener("ensio-rachid:panels", profileFirst);
         profileFirst();
-      })();</script
-    ><script id="ensio-inbox-script">
+      })();</script><script id="ensio-inbox-script" type="text/plain" data-ensio-deferred>
       (() => {
         "use strict";
         const KEY_INBOX = "ensio-rachid-inbox-v1";
@@ -19232,7 +19224,7 @@ button:focus-visible {outline:3px solid #a5b4fc;outline-offset:3px}
 .inbox-item button {min-height:44px;margin:4px}
 #ensioRewards {display:grid;gap:20px}
 @media(max-width:850px){body:not(.shinobi-mode) .sidebar .tabs {display:flex!important;overflow-x:auto;justify-content:space-around;gap:2px}body:not(.shinobi-mode) .sidebar .tabs>.tab:not(.legacy-route) {flex:1 0 65px!important;min-width:65px!important;padding:8px 3px!important}.mobile-tab-label {font-size:10px!important}.sidebar .tabs>.legacy-route {display:none!important}}
-</style><script id="ensio-ergonomie-v2">
+</style><script id="ensio-ergonomie-v2" type="text/plain" data-ensio-deferred>
 (()=>{
 
 function organize(){
@@ -19245,7 +19237,7 @@ document.addEventListener('ensio-rachid:panels',organize);
 document.addEventListener('ensio-rachid:changed',organize);
 document.addEventListener('click',e=>{if(e.target.closest('[data-ensio-open]'))window.rpgLifeNavigation.go('rpg')});
 organize();
-})();</script><script id="ensio-weekly-quests">
+})();</script><script id="ensio-weekly-quests" type="text/plain" data-ensio-deferred>
 (()=>{
 'use strict';
 const CONFIG='ensio-rachid-weekly-config-v1';
@@ -19280,7 +19272,7 @@ paint();
 #trainingRoot .sport-grid {gap:16px}#trainingRoot .sport-card{border-radius:16px}
 .training-modal{max-width:760px;width:calc(100% - 24px);max-height:90dvh;padding:24px;background:#1b1f2d;color:#edf0f8;border:1px solid #49516d;border-radius:18px;overflow:auto}.training-modal::backdrop{background:#080b13c9}.training-modal header{display:flex;justify-content:space-between;align-items:center;gap:12px}.training-modal button{min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid #556181;background:#303951;color:#fff}.training-modal label{display:flex;flex-direction:column;gap:7px;margin:12px 0}.training-modal input,.training-modal select,#ensioLibraryMount input,#ensioLibraryMount select{padding:12px;border:1px solid #49516d;background:#111722;color:#f0f3ff;border-radius:9px;min-width:0;width:100%}.training-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.training-draft-row{padding:16px;border:1px solid #49516d;border-radius:12px;margin:12px 0}.training-draft-row h3{margin-top:0}.training-library-filters{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin:16px 0}.training-modal .sport-actions{display:flex;flex-wrap:wrap;gap:10px}.training-tag{font-size:12px;color:#bbc8ef}.training-library-card[hidden]{display:none!important}
 @media(max-width:550px){.training-form-grid,.training-library-filters{grid-template-columns:1fr}.training-modal{padding:16px}.training-nav{gap:5px}.training-nav button{flex:1 0 28%;padding:10px 5px;font-size:12px}}
-</style><script id="ensio-training-ergonomics-script">
+</style><script id="ensio-training-ergonomics-script" type="text/plain" data-ensio-deferred>
 (()=>{
 'use strict';
 const catalog=[["Développé couché", "Pectoraux", "weight"], ["Développé couché haltères", "Pectoraux", "weight"], ["Développé incliné", "Pectoraux", "weight"], ["Développé incliné haltères", "Pectoraux", "weight"], ["Développé décliné", "Pectoraux", "weight"], ["Chest press", "Pectoraux", "weight"], ["Pec deck", "Pectoraux", "weight"], ["Écartés haltères", "Pectoraux", "weight"], ["Écartés poulie", "Pectoraux", "weight"], ["Écartés poulie basse", "Pectoraux", "weight"], ["Pompes", "Pectoraux", "bodyweight"], ["Pompes inclinées", "Pectoraux", "bodyweight"], ["Pompes déclinées", "Pectoraux", "bodyweight"], ["Pull-over haltère", "Pectoraux", "weight"], ["Tractions", "Dos", "bodyweight"], ["Tractions supination", "Dos", "bodyweight"], ["Tractions prise neutre", "Dos", "bodyweight"], ["Tractions assistées", "Dos", "bodyweight"], ["Tirage vertical", "Dos", "weight"], ["Tirage vertical prise serrée", "Dos", "weight"], ["Tirage horizontal poulie", "Dos", "weight"], ["Rowing", "Dos", "weight"], ["Rowing haltère unilatéral", "Dos", "weight"], ["Rowing barre en T", "Dos", "weight"], ["Rowing machine", "Dos", "weight"], ["Rowing poitrine appuyée", "Dos", "weight"], ["Tirage bras tendus", "Dos", "weight"], ["Pull-over poulie", "Dos", "weight"], ["Soulevé de terre", "Dos", "weight"], ["Extensions lombaires", "Dos", "bodyweight"], ["Développé épaules", "Épaules", "weight"], ["Développé militaire barre", "Épaules", "weight"], ["Développé épaules haltères", "Épaules", "weight"], ["Développé Arnold", "Épaules", "weight"], ["Développé épaules machine", "Épaules", "weight"], ["Élévations latérales", "Épaules", "weight"], ["Élévations latérales poulie", "Épaules", "weight"], ["Élévations latérales machine", "Épaules", "weight"], ["Élévations frontales", "Épaules", "weight"], ["Oiseau haltères", "Épaules", "weight"], ["Oiseau machine", "Épaules", "weight"], ["Face pull", "Épaules", "weight"], ["Tirage menton", "Épaules", "weight"], ["Shrugs", "Épaules", "weight"], ["Curl biceps", "Biceps", "weight"], ["Curl barre EZ", "Biceps", "weight"], ["Curl barre droite", "Biceps", "weight"], ["Curl haltères alterné", "Biceps", "weight"], ["Curl incliné", "Biceps", "weight"], ["Curl marteau", "Biceps", "weight"], ["Curl pupitre", "Biceps", "weight"], ["Curl concentré", "Biceps", "weight"], ["Curl poulie basse", "Biceps", "weight"], ["Curl corde", "Biceps", "weight"], ["Curl inversé", "Biceps", "weight"], ["Curl araignée", "Biceps", "weight"], ["Extension triceps", "Triceps", "weight"], ["Dips", "Triceps", "bodyweight"], ["Dips assistés", "Triceps", "bodyweight"], ["Développé couché prise serrée", "Triceps", "weight"], ["Barre au front", "Triceps", "weight"], ["Extension triceps corde", "Triceps", "weight"], ["Extension triceps au-dessus de la tête", "Triceps", "weight"], ["Extension triceps haltère", "Triceps", "weight"], ["Kickback triceps", "Triceps", "weight"], ["Pompes diamant", "Triceps", "bodyweight"], ["Squat", "Jambes", "weight"], ["Squat avant", "Jambes", "weight"], ["Hack Squat", "Jambes", "weight"], ["Goblet squat", "Jambes", "weight"], ["Squat au poids du corps", "Jambes", "bodyweight"], ["Presse à cuisses", "Jambes", "weight"], ["Presse à cuisses unilatérale", "Jambes", "weight"], ["Fentes", "Jambes", "weight"], ["Fentes marchées", "Jambes", "weight"], ["Fentes arrière", "Jambes", "weight"], ["Squat bulgare", "Jambes", "weight"], ["Montées sur banc", "Jambes", "weight"], ["Leg extension", "Jambes", "weight"], ["Leg curl", "Jambes", "weight"], ["Leg curl assis", "Jambes", "weight"], ["Leg curl debout", "Jambes", "weight"], ["Soulevé de terre roumain", "Jambes", "weight"], ["Soulevé de terre jambes tendues", "Jambes", "weight"], ["Hip thrust", "Jambes", "weight"], ["Pont fessier", "Jambes", "bodyweight"], ["Abducteurs machine", "Jambes", "weight"], ["Adducteurs machine", "Jambes", "weight"], ["Mollets", "Jambes", "weight"], ["Mollets assis", "Jambes", "weight"], ["Crunch", "Abdominaux", "bodyweight"], ["Crunch poulie", "Abdominaux", "weight"], ["Crunch machine", "Abdominaux", "weight"], ["Crunch inversé", "Abdominaux", "bodyweight"], ["Relevés de jambes suspendu", "Abdominaux", "bodyweight"], ["Relevés de genoux suspendu", "Abdominaux", "bodyweight"], ["Gainage", "Abdominaux", "bodyweight"], ["Gainage latéral", "Abdominaux", "bodyweight"], ["Roue abdominale", "Abdominaux", "bodyweight"], ["Russian twist", "Abdominaux", "bodyweight"]];
@@ -19351,7 +19343,7 @@ libraryRender();
 #ensioProfileTop,#rpgRoot,#ensioTower,#rpgBosses,#ensioCareerLegacy{display:none!important}
 #ensioFreeConversations>#ensioInteractions>summary{display:none}#ensioFreeConversations>#ensioInteractions{margin-top:20px}#ensioConversationPortrait[hidden],[data-career-panel][hidden],[data-quests-panel][hidden]{display:none!important}
 #ensioEncounter [data-ensio-route="dungeons"]{display:none!important}
-</style><script id="ensio-section-navigation-script">
+</style><script id="ensio-section-navigation-script" type="text/plain" data-ensio-deferred>
 (()=>{
 'use strict';
 const quests=document.getElementById('quests'),top=quests.querySelector(':scope>.row');
@@ -19387,6 +19379,69 @@ document.addEventListener('click',e=>{
  if(e.target.closest('[data-ensio-open]')){storyView('free');portrait.hidden=false;}
 });
 window.ensioStoryNavigation={show:storyView};
-})();</script></body
+})();</script><style id="ensio-cloud-style">
+#ensioCloudGate{position:fixed;inset:0;z-index:2147483647;background:#10121bf5;display:grid;place-items:center;padding:20px;overflow:auto}#ensioCloudGate[hidden]{display:none}#ensioCloudGate>div{width:min(100%,460px);background:#1b1f2d;border:1px solid #49516d;border-radius:20px;padding:28px;color:#edf0f8}#ensioCloudGate h1{font-size:28px}#ensioCloudGate label{display:flex;flex-direction:column;gap:8px;margin:15px 0}#ensioCloudGate input:not([type="checkbox"]){width:100%;padding:13px;background:#111722;color:white;border:1px solid #56617e;border-radius:9px;font:inherit}#ensioCloudGate button,.ensio-cloud-account button{padding:12px;border-radius:10px;background:#343758;border:1px solid #818cf8;color:white;font:inherit;min-height:44px}#ensioCloudGate button:disabled{opacity:.5}#cloudActions{display:grid;gap:12px}#cloudMessage{line-height:1.6}#ensioCloudGate .cloud-remember{display:flex;flex-direction:row;align-items:center}.ensio-cloud-account{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:12px;margin-left:auto}.ensio-cloud-account span{max-width:260px}#cloudReset{margin:12px 0}
+</style><div id="ensioCloudGate" role="dialog" aria-modal="true" aria-labelledby="cloudTitle"><div><small>ENSIO RPG · ESPACE PERSONNEL</small><h1 id="cloudTitle">Retrouve ton aventure</h1><p id="cloudMessage" role="status">Chargement de la connexion…</p><form id="cloudLogin" hidden><label>Adresse mail<input id="cloudEmail" type="email" autocomplete="username" required></label><label>Mot de passe<input id="cloudPassword" type="password" autocomplete="current-password" required></label><label class="cloud-remember"><input id="cloudRemember" type="checkbox" checked>Rester connecté sur cet appareil</label><button type="submit">Se connecter</button><button type="button" id="cloudReset">Mot de passe oublié</button></form><div id="cloudActions"></div></div></div><script>window.ensioCloudStorage=appStorage;</script><script type="module" id="ensio-cloud-script">(async()=>{
+'use strict';
+const panel=document.getElementById('ensioCloudGate'),msg=document.getElementById('cloudMessage'),form=document.getElementById('cloudLogin'),actions=document.getElementById('cloudActions');
+document.querySelector('.app')?.setAttribute('inert','');
+const originalSet=Storage.prototype.setItem,originalRemove=Storage.prototype.removeItem;
+const set=(k,v)=>originalSet.call(localStorage,k,v),remove=k=>originalRemove.call(localStorage,k);
+const gameKey=k=>typeof k==='string'&&(k.startsWith('ensio-rachid')||k.startsWith('ensioRpg'));
+function snapshot(){const out={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(gameKey(k))out[k]=localStorage.getItem(k)}return out}
+const cacheKey=uid=>'ensio-cloud:cache:'+uid;
+let uid=null,cache=null,started=false,ready=false,dirty=false,writing=false,counter=0,timer=null,unsubscribe=null,conflict=false,ref=null,observed=null;
+const writer=crypto.randomUUID?.()||String(Date.now())+'-'+Math.random();
+let sdk,auth,db;
+function gate(text){panel.hidden=false;msg.textContent=text;document.querySelector('.app')?.setAttribute('inert','');}
+function status(text){const el=document.getElementById('ensioCloudStatus');if(el)el.textContent=text;}
+function hideGate(){panel.hidden=true;document.querySelector('.app')?.removeAttribute('inert');}
+function buttons(items){actions.replaceChildren();for(const [label,fn]of items){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=async()=>{b.disabled=true;try{await fn()}catch(e){msg.textContent=errorText(e)}finally{b.disabled=false}};actions.append(b)}}
+function errorText(e){const code=e?.code||'';if(/permission-denied/.test(code))return 'Accès Firestore refusé. Publie les règles de sauvegarde dans Firebase, puis réessaie.';if(/invalid-credential|wrong-password|user-not-found/.test(code))return 'Adresse mail ou mot de passe incorrect.';if(/too-many-requests/.test(code))return 'Trop de tentatives. Réessaie dans quelques minutes.';if(/network|unavailable|offline/.test(code))return 'Connexion indisponible. Les modifications locales sont conservées.';return 'Opération impossible : '+(e?.message||code||'erreur inconnue');}
+function validate(data){if(!data||data.schema!==1||!Number.isSafeInteger(data.revision)||data.revision<1||typeof data.payload!=='string')throw Error('Sauvegarde distante incompatible.');const payload=JSON.parse(data.payload);window.ensioCloudStorage.prepare({format:'ensio-rachid-complete-v6',storage:payload});return payload;}
+function saveCache(){if(!uid||!cache)return;cache.storage=snapshot();cache.dirty=dirty;set(cacheKey(uid),JSON.stringify(cache));}
+function install(storage){window.ensioCloudStorage.prepare({format:'ensio-rachid-complete-v6',storage});const before=snapshot();try{for(const k of Object.keys(before))remove(k);for(const [k,v]of Object.entries(storage))set(k,v)}catch(e){for(const k of Object.keys(snapshot()))remove(k);for(const[k,v]of Object.entries(before))set(k,v);throw e;}}
+function backupLocal(){const data=JSON.stringify({format:'ensio-rachid-complete-v6',storage:snapshot()},null,2),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='RPG_ENSIO_avant_synchronisation.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function changed(){if(!ready||!uid)return;dirty=true;counter++;saveCache();status(navigator.onLine?'Synchronisation en attente…':'Hors connexion · sauvegarde locale');clearTimeout(timer);timer=setTimeout(()=>sync(),1500)}
+Storage.prototype.setItem=function(k,v){const before=this.getItem(k);const result=originalSet.call(this,k,v);if(this===localStorage&&gameKey(k)&&before!==String(v))changed();return result};
+Storage.prototype.removeItem=function(k){const before=this.getItem(k);const result=originalRemove.call(this,k);if(this===localStorage&&gameKey(k)&&before!==null)changed();return result};
+function boot(){if(started)return;started=true;for(const old of [...document.querySelectorAll('script[data-ensio-deferred]')]){const script=document.createElement('script');script.textContent=old.textContent;script.id=old.id;old.replaceWith(script)}
+ const box=document.createElement('div');box.className='ensio-cloud-account';box.innerHTML='<span id="ensioCloudStatus" role="status">Synchronisation…</span><button type="button" id="ensioCloudLogout">Se déconnecter</button>';document.querySelector('.topbar').append(box);document.getElementById('ensioCloudLogout').onclick=logout;
+ const email=document.createElement('p');email.textContent='Compte connecté : '+auth.currentUser.email;document.getElementById('settings').prepend(email);
+}
+async function activate(storage,revision,isDirty){set('ensio-cloud:last-owner',uid);cache={revision,storage,dirty:isDirty};install(storage);dirty=isDirty;ready=true;set(cacheKey(uid),JSON.stringify(cache));hideGate();boot();saveCache();if(dirty)changed();else status('Synchronisé');listen();}
+async function reloadWith(data){const storage=validate(data);ready=false;saveCache();install(storage);set(cacheKey(uid),JSON.stringify({revision:data.revision,storage,dirty:false}));gate('Mise à jour de ta progression…');location.reload();}
+async function chooseConflict(data){if(conflict)return;conflict=true;form.hidden=true;gate('Deux versions de ta progression existent. Choisis celle à conserver. La version de cet appareil reste sauvegardée localement tant que tu n’as pas choisi.');status('Choix de sauvegarde nécessaire');buttons([['Exporter la version de cet appareil',async()=>backupLocal()],['Utiliser la sauvegarde en ligne',async()=>{await reloadWith(data)}],['Conserver cet appareil et remplacer la version en ligne',async()=>{if(!confirm('Remplacer la sauvegarde en ligne par celle de cet appareil ?'))return;cache.revision=data?.revision||0;conflict=false;hideGate();dirty=true;saveCache();await sync()}]]);}
+async function sync(){if(!ready||!uid||!dirty||writing||conflict)return;if(!navigator.onLine){status('Hors connexion · sauvegarde locale');return}writing=true;const currentUid=uid,count=counter,payload=JSON.stringify(snapshot()),base=cache.revision;status('Synchronisation en cours…');try{if(new TextEncoder().encode(payload).length>850000)throw Error('Sauvegarde volumineuse : exporte ton aventure. La synchronisation est suspendue au-delà de 850 Ko.');
+ const revision=await sdk.runTransaction(db,async tx=>{const doc=await tx.get(ref),data=doc.exists()?doc.data():null;const rev=data?.revision||0;if(rev!==base){const err=Error('Conflit de versions');err.cloudConflict=data;err.isConflict=true;throw err}const next=rev+1;tx.set(ref,{schema:1,revision:next,payload,writer,updatedAt:sdk.serverTimestamp()});return next});
+ if(uid!==currentUid)return;cache.revision=revision;dirty=counter!==count;saveCache();status(dirty?'Synchronisation en attente…':'Synchronisé');
+ }catch(e){if(e.isConflict){await chooseConflict(e.cloudConflict)}else{status(errorText(e));saveCache();if(e.code==='permission-denied'){gate(errorText(e));form.hidden=true;buttons([['Réessayer',async()=>{hideGate();await sync()}],['Se déconnecter',logout]])}}}
+ finally{writing=false;if(dirty&&!conflict){clearTimeout(timer);timer=setTimeout(sync,15000)}if(observed&&!dirty&&!conflict){const next=observed;observed=null;if(next.revision>cache.revision)reloadWith(next).catch(e=>status(errorText(e)))}}
+}
+function listen(){unsubscribe?.();unsubscribe=sdk.onSnapshot(ref,{includeMetadataChanges:true},snap=>{if(!ready||!snap.exists()||snap.metadata.hasPendingWrites||snap.metadata.fromCache)return;const data=snap.data();if(data.revision<=cache.revision)return;if(writing){observed=data;return}try{validate(data);if(dirty)chooseConflict(data);else reloadWith(data)}catch(e){status(errorText(e))}},e=>status(errorText(e)));}
+async function logout(){if(writing)return alert('Attends la fin de la synchronisation.');if(dirty&&!confirm('Des changements ne sont pas encore en ligne. Ils resteront sur cet appareil. Se déconnecter ?'))return;saveCache();ready=false;unsubscribe?.();await sdk.signOut(auth);location.reload();}
+async function initialize(user){if(started&&user?.uid!==uid){ready=false;gate('Changement de compte…');location.reload();return}if(!user){uid=null;form.hidden=false;gate('Connecte-toi pour retrouver ta progression sur tes appareils.');buttons([]);return}
+ uid=user.uid;form.hidden=true;gate('Chargement de ta sauvegarde…');ref=sdk.doc(db,'users',uid,'saves','main');
+ try{const raw=localStorage.getItem(cacheKey(uid));cache=raw?JSON.parse(raw):null;if(cache){window.ensioCloudStorage.prepare({format:'ensio-rachid-complete-v6',storage:cache.storage});if(!Number.isSafeInteger(cache.revision)||cache.revision<0)throw Error('Cache invalide')}}catch(e){gate('La copie locale de ce compte est illisible. Elle est conservée ; ne vide pas les données du navigateur.');return}
+ let remote;try{const snap=await sdk.getDocFromServer(ref);remote=snap.exists()?snap.data():null;if(remote)validate(remote)}catch(e){if(cache&&/unavailable|network|offline/.test(e.code||e.message)){await activate(cache.storage,cache.revision,cache.dirty);status('Hors connexion · copie locale');return}gate(errorText(e));buttons([['Réessayer',async()=>initialize(user)],['Se déconnecter',logout]]);return}
+ if(cache){if(cache.dirty&&remote&&cache.revision!==remote.revision){install(cache.storage);dirty=true;ready=true;boot();saveCache();await chooseConflict(remote);listen();return}if(cache.dirty){await activate(cache.storage,cache.revision,true);return}if(remote){await activate(validate(remote),remote.revision,false);return}await activate(cache.storage,0,true);return}
+ const local=snapshot();const previous=localStorage.getItem('ensio-cloud:last-owner');
+ if(remote){if(Object.keys(local).length&&(!previous||previous===uid)){install(local);cache={revision:0,storage:local,dirty:true};dirty=true;ready=true;boot();saveCache();await chooseConflict(remote);listen();return}await activate(validate(remote),remote.revision,false);set('ensio-cloud:last-owner',uid);return}
+ if(Object.keys(local).length&&(!previous||previous===uid)){gate('Ce compte n’a pas encore de sauvegarde en ligne. Veux-tu reprendre la progression présente sur cet appareil ?');buttons([['Reprendre la progression de cet appareil',async()=>{set('ensio-cloud:last-owner',uid);await activate(local,0,true)}],['Commencer une nouvelle partie',async()=>{set('ensio-cloud:last-owner',uid);await activate({'ensio-rachid-v1':'[]'},0,true)}]]);return}
+ set('ensio-cloud:last-owner',uid);await activate({'ensio-rachid-v1':'[]'},0,true);
+}
+try{
+ const [appApi,authApi,fireApi]=await Promise.all([import('https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js')]);sdk={...authApi,...fireApi};
+ const app=appApi.initializeApp({apiKey:'AIzaSyDjZ9KTUcLtzGgCuEE1Oww8RAcbz0Hq3Qg',authDomain:'rpg-ensio.firebaseapp.com',projectId:'rpg-ensio',storageBucket:'rpg-ensio.firebasestorage.app',messagingSenderId:'805877212920',appId:'1:805877212920:web:782db21d244794559bfd0d'});auth=authApi.getAuth(app);auth.languageCode='fr';db=fireApi.getFirestore(app);
+ form.onsubmit=async e=>{e.preventDefault();const b=form.querySelector('button[type="submit"]');b.disabled=true;msg.textContent='Connexion…';try{await sdk.setPersistence(auth,document.getElementById('cloudRemember').checked?sdk.browserLocalPersistence:sdk.browserSessionPersistence);await sdk.signInWithEmailAndPassword(auth,document.getElementById('cloudEmail').value.trim(),document.getElementById('cloudPassword').value);document.getElementById('cloudPassword').value=''}catch(e){msg.textContent=errorText(e)}finally{b.disabled=false}};
+ document.getElementById('cloudReset').onclick=async()=>{const email=document.getElementById('cloudEmail').value.trim();if(!email){msg.textContent='Renseigne ton adresse mail.';return}try{await sdk.sendPasswordResetEmail(auth,email);msg.textContent='Si ce compte existe, un mail de réinitialisation sera envoyé.'}catch(e){msg.textContent=errorText(e)}};
+ sdk.onAuthStateChanged(auth,user=>initialize(user).catch(e=>{gate(errorText(e));buttons([['Réessayer',async()=>initialize(auth.currentUser)]])}));
+ window.addEventListener('online',()=>{if(ready){listen();sync()}});window.addEventListener('offline',()=>status('Hors connexion · sauvegarde locale'));
+ window.addEventListener('pagehide',()=>saveCache());
+ window.addEventListener('beforeunload',e=>{if(dirty){saveCache();e.preventDefault();e.returnValue=''}});
+ window.addEventListener('storage',e=>{if(e.key===cacheKey(uid)&&ready){ready=false;cache=null;dirty=false;clearTimeout(timer);unsubscribe?.();gate('La sauvegarde a changé dans un autre onglet. Recharge cette page pour continuer.');buttons([['Recharger',async()=>location.reload()]])}});
+}catch(e){gate('Impossible de charger la connexion Firebase. Ouvre le jeu avec son adresse HTTPS et vérifie ta connexion Internet.');buttons([['Réessayer',async()=>location.reload()]])}
+})();
+</script></body
   ></html
 >
